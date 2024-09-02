@@ -201,3 +201,18 @@ bool TCP::setAddress(const char *address){
   this->address.push_back(tmp);
   return true;
 }
+
+/**
+ * @brief Set TCP/IP port interface.
+ *
+ * This method is responsible for setting port of TCP/IP interface.
+ *
+ * @param[in] port port communication.
+ * @return `true` when the port is valid
+ * @return `false` when the port is invalid
+ */
+bool TCP::setPort(int port){
+  if (port < 0 && port > 65535) return false;
+  this->port = port;
+  return true;
+}
