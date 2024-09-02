@@ -43,6 +43,138 @@ TCP::TCP(){
 }
 
 /**
+ * @brief Custom constructor.
+ *
+ * This constructor initializes some private and protected data members and parameters to their default values, including:
+ * - `maxClient = 10` : Default value of maximum number of client (for server) is 10.
+ * - `port = 3000` : Port is set to 3000 as its default value.
+ * - `timeout = 1500` : Timeout is set to 1500 ms (1.5 second).
+ * - `keepAliveMs = 0` : Keep-alive interval is set to 0 milliseconds.
+ * - Initializes the mutex for thread safety.
+ * @param[in] address The address is in the form of an IP address with a size of 4 bytes.
+ */
+TCP::TCP(const unsigned char *address){
+  __TCP(this);
+  this->setAddress(address);
+}
+
+/**
+ * @brief Overloading of Custom constructor.
+ *
+ * This constructor initializes some private and protected data members and parameters to their default values, including:
+ * - `maxClient = 10` : Default value of maximum number of client (for server) is 10.
+ * - `timeout = 1500` : Timeout is set to 1500 ms (1.5 second).
+ * - `keepAliveMs = 0` : Keep-alive interval is set to 0 milliseconds.
+ * - Initializes the mutex for thread safety.
+ * @param[in] address The address is in the form of an IP address with a size of 4 bytes.
+ * @param[in] port The port of TCP/IP interface.
+ */
+TCP(const unsigned char *address, int port){
+  __TCP(this);
+  this->setAddress(address);
+  this->setPort(port);
+}
+
+/**
+ * @brief Overloading of Custom constructor.
+ *
+ * This constructor initializes some private and protected data members and parameters to their default values, including:
+ * - `maxClient = 10` : Default value of maximum number of client (for server) is 10.
+ * - `port = 3000` : Port is set to 3000 as its default value.
+ * - `timeout = 1500` : Timeout is set to 1500 ms (1.5 second).
+ * - `keepAliveMs = 0` : Keep-alive interval is set to 0 milliseconds.
+ * - Initializes the mutex for thread safety.
+ * @param[in] address The address is in the form of an IP address with a size of 4 bytes.
+ */
+TCP(const std::vector <unsigned char> address){
+  __TCP(this);
+  this->setAddress(address);
+}
+
+/**
+ * @brief Overloading of Custom constructor.
+ *
+ * This constructor initializes some private and protected data members and parameters to their default values, including:
+ * - `maxClient = 10` : Default value of maximum number of client (for server) is 10.
+ * - `timeout = 1500` : Timeout is set to 1500 ms (1.5 second).
+ * - `keepAliveMs = 0` : Keep-alive interval is set to 0 milliseconds.
+ * - Initializes the mutex for thread safety.
+ * @param[in] address The address is in the form of an IP address with a size of 4 bytes.
+ * @param[in] port The port of TCP/IP interface.
+ */
+TCP(const std::vector <unsigned char> address, int port){
+  __TCP(this);
+  this->setAddress(address);
+  this->setPort(port);
+}
+
+/**
+ * @brief Overloading of Custom constructor.
+ *
+ * This constructor initializes some private and protected data members and parameters to their default values, including:
+ * - `maxClient = 10` : Default value of maximum number of client (for server) is 10.
+ * - `port = 3000` : Port is set to 3000 as its default value.
+ * - `timeout = 1500` : Timeout is set to 1500 ms (1.5 second).
+ * - `keepAliveMs = 0` : Keep-alive interval is set to 0 milliseconds.
+ * - Initializes the mutex for thread safety.
+ * @param[in] address The address in the form of an IP address or domain (in this case, a string in the form of a char pointer).
+ */
+TCP(const char *address){
+  __TCP(this);
+  this->setAddress(address);
+}
+
+/**
+ * @brief Overloading of Custom constructor.
+ *
+ * This constructor initializes some private and protected data members and parameters to their default values, including:
+ * - `maxClient = 10` : Default value of maximum number of client (for server) is 10.
+ * - `timeout = 1500` : Timeout is set to 1500 ms (1.5 second).
+ * - `keepAliveMs = 0` : Keep-alive interval is set to 0 milliseconds.
+ * - Initializes the mutex for thread safety.
+ * @param[in] address The address in the form of an IP address or domain (in this case, a string in the form of a char pointer).
+ * @param[in] port The port of TCP/IP interface.
+ */
+TCP(const char *address, int port){
+  __TCP(this);
+  this->setAddress(address);
+  this->setPort(port);
+}
+
+/**
+ * @brief Overloading of Custom constructor.
+ *
+ * This constructor initializes some private and protected data members and parameters to their default values, including:
+ * - `maxClient = 10` : Default value of maximum number of client (for server) is 10.
+ * - `port = 3000` : Port is set to 3000 as its default value.
+ * - `timeout = 1500` : Timeout is set to 1500 ms (1.5 second).
+ * - `keepAliveMs = 0` : Keep-alive interval is set to 0 milliseconds.
+ * - Initializes the mutex for thread safety.
+ * @param[in] address The address in the form of an IP address or domain (string).
+ */
+TCP(const std::string address){
+  __TCP(this);
+  this->setAddress(address);
+}
+
+/**
+ * @brief Overloading of Custom constructor.
+ *
+ * This constructor initializes some private and protected data members and parameters to their default values, including:
+ * - `maxClient = 10` : Default value of maximum number of client (for server) is 10.
+ * - `timeout = 1500` : Timeout is set to 1500 ms (1.5 second).
+ * - `keepAliveMs = 0` : Keep-alive interval is set to 0 milliseconds.
+ * - Initializes the mutex for thread safety.
+ * @param[in] address The address in the form of an IP address or domain (string).
+ * @param[in] port The port of TCP/IP interface.
+ */
+TCP(const std::string address, int port){
+  __TCP(this);
+  this->setAddress(address);
+  this->setPort(port);
+}
+
+/**
  * @brief Check is IP Address valid or not.
  *
  * This method is responsible for validating whether the IP Address is valid or not.
