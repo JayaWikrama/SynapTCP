@@ -89,12 +89,18 @@ bool TCP::isValidIPAddress(const char *address){
   if (strlen(address) > 15){
     return false;
   }
+  if (*address == '.') return false;
+  bool isPrevDot = false;
   unsigned short cnt = 0;
   unsigned short value = 0;
   do {
     if (*address == '.'){
+      if (isPrevDot){
+        return false;
+      }
       value = 0;
       cnt++;
+      isPrevDot = true;
     }
     else if (*address >= 0x30 && *address <= 0x39){
       value *= 10;
@@ -102,6 +108,7 @@ bool TCP::isValidIPAddress(const char *address){
       if (value >= 255){
         return false;
       }
+      isPrevDot = false;
     }
     else {
       return false;
@@ -123,4 +130,74 @@ bool TCP::isValidIPAddress(const char *address){
  */
 bool TCP::isValidIPAddress(const std::string address){
   return this->isValidIPAddress(address.c_str());
+}
+
+/**
+ * @brief Set Address of TCP/IP Interface.
+ *
+ * This method is responsible for setting Address in IP Address form (with a size of 4 bytes).
+ *
+ * @param[in] address The IP Address (with a size of 4 bytes).
+ * @return `true` when the IP Address is valid
+ * @return `false` when the IP Address is invalid
+ */
+bool TCP::setAddress(const unsigned char *address){
+  if (this->isValidIPAddress(address) == false) return false;
+  this->address.assign(address, address + 4);
+  return true;
+}
+
+/**
+ * @brief Overloaded method for `setAddress` to set Address of TCP/IP Interface.
+ *
+ * This method is responsible for setting Address in IP Address form (with a size of 4 bytes).
+ *
+ * @param[in] address The IP Address (with a size of 4 bytes).
+ * @return `true` when the IP Address is valid
+ * @return `false` when the IP Address is invalid
+ */
+bool TCP::setAddress(const std::vector <unsigned char> address){
+  if (this->isValidIPAddress(address) == false) return false;
+  this->address.assign(address.begin(), address.end());
+  return true;
+}
+
+/**
+ * @brief Overloaded method for `setAddress` to set Address of TCP/IP Interface.
+ *
+ * This method is responsible for setting Address in IP Address or domain in string form.
+ *
+ * @param[in] address The IP Address (in string form).
+ * @return `true` when the Address is valid (base on its pattern)
+ * @return `false` when the Address is invalid
+ */
+bool TCP::setAddress(const std::string address){
+  return this->setAddress(address.c_str())
+}
+
+/**
+ * @brief Overloaded method for `setAddress` to set Address of TCP/IP Interface.
+ *
+ * This method is responsible for setting Address in IP Address or domain in string form.
+ *
+ * @param[in] address The IP Address (in string form).
+ * @return `true` when the Address is valid (base on its pattern)
+ * @return `false` when the Address is invalid
+ */
+bool TCP::setAddress(const char *address){
+  if (this->isValidIPAddress(address) == false) return false;
+  unsigned char tmp = 0x00;
+  this->address.clear();
+  do {
+    if (*address == '.'){
+      this->address.push_back(tmp);
+      tmp = 0x00;
+    }
+    else {
+      tmp = tmp * 10 + (*address - 0x30);
+    }
+    address++;
+  } while (*address != 0x00);
+  this->address.push_back(tmp);
+  return true;
 }
