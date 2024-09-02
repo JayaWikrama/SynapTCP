@@ -53,13 +53,9 @@
 #define __TCP_BASIC_HPP__
 
 #include <string>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <time.h>
+#include <vector>
 #include <netdb.h>
 #include <netinet/in.h>
-#include <string.h>
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -90,6 +86,8 @@ class TCP {
     #endif
     pthread_mutex_t mtx;                  /*!< locking mechanism for common method */
     pthread_mutex_t wmtx;                 /*!< locking mechanism for write method */
+    std::vector <unsigned char> data;           /*!< variable that store received data */
+    std::vector <unsigned char> remainingData;  /*!< variable that store remaining data */
   public:
     /**
      * @brief Default constructor.
