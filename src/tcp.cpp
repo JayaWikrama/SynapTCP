@@ -605,3 +605,112 @@ bool TCP::setSSLVerifyMode(bool sslVerifyMode){
 #endif
 }
 
+/**
+ * @brief Gets the address of TCP/IP communication interface.
+ *
+ * This getter function retrieves address currently configured for TCP/IP communication interface.
+ *
+ * @return The address of TCP/IP Interface.
+ */
+std::string TCP::getAddress(){
+  pthread_mutex_lock(&(this->mtx));
+  pthread_mutex_lock(&(this->wmtx));
+  if (this->address.size() != 4){
+    pthread_mutex_lock(&(this->mtx));
+    pthread_mutex_lock(&(this->wmtx));
+    return std::string("");
+  }
+  char result[16];
+  memset(result, 0x00, sizeof(result));
+  sprintf(result, "%d.%d.%d.%d",
+          static_cast<int>(this->address[0]),
+          static_cast<int>(this->address[1]),
+          static_cast<int>(this->address[2]),
+          static_cast<int>(this->address[3])
+  );
+  pthread_mutex_unlock(&(this->mtx));
+  pthread_mutex_unlock(&(this->wmtx));
+  return std::string(result);
+}
+
+/**
+ * @brief Gets the port for TCP/IP communication interface.
+ *
+ * This getter function retrieves port that currently configured for TCP/IP communication interface.
+ *
+ * @return The port for TCP/IP communication interface.
+ */
+int TCP::getPort(){
+  return this->port;
+}
+
+/**
+ * @brief Gets the maximum clients that the TCP/IP Server can handle.
+ *
+ * This getter function retrieves the maximum clients (the TCP/IP Server can handle) that currently configured for TCP/IP communication interface.
+ *
+ * @return The number of client that the TCP/IP Server can handle.
+ */
+int TCP::getMaximumClient(){
+  return this->maxClient;
+}
+
+/**
+ * @brief Gets the communication timeout of TCP/IP communication.
+ *
+ * This getter function retrieves the communication timeout that currently configured for TCP/IP communication.
+ *
+ * @return The communication timeout.
+ */
+const struct timeval *TCP::getTimeout(){
+  return &(this->tvTimeout);
+}
+
+/**
+ * @brief Gets the keep-alive interval for communication.
+ *
+ * This getter function retrieves the maximum wait time configured for receiving the next byte of data after the initial byte has been successfully received. The interval is specified in milliseconds.
+ *
+ * @return The keep-alive interval in milliseconds.
+ */
+int TCP::getKeepAliveMs(){
+  return this->keepAliveMs;
+}
+
+/**
+ * @brief Gets is the SSL handshake active or not.
+ *
+ * This getter function retrieves is the SSL handshake active or not for TCP/IP communication.
+ *
+ * @return SSL handshake (use) status.
+ */
+bool TCP::getIsUseSSL(){
+#ifdef __STCP_SSL__
+  return this->isUseSSL;
+#else
+  return false;
+#endif
+}
+
+/**
+ * @brief Gets is the SSL verify mode active or not.
+ *
+ * This getter function retrieves is the SSL verify mode active or not for TCP/IP communication.
+ *
+ * @return SSL verify mode status.
+ */
+bool getSSLVerifyMode(){
+#ifdef __STCP_SSL__
+  pthread_mutex_lock(&(this->mtx));
+  pthread_mutex_lock(&(this->wmtx));
+  bool result = false;
+  if (this->isUseSSL){
+    result = this->sslVerifyMode;
+  }
+  pthread_mutex_unlock(&(this->mtx));
+  pthread_mutex_unlock(&(this->wmtx));
+  return result;
+#else
+  return false;
+#endif
+}
