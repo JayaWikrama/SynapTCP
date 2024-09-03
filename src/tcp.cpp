@@ -1074,3 +1074,105 @@ int TCP::receiveData(size_t sz){
 int TCP::receiveData(){
   return this->receiveData(0, false);
 }
+
+/**
+ * @brief Recieves TCP/IP data until the desired start bytes are found.
+ *
+ * This function performs a TCP/IP data receiving operation until the specified start bytes are detected. Any TCP/IP data received before the start bytes are found is automatically discarded. The received TCP/IP data can be accessed using the `TCP::getBuffer` method.
+ *
+ * @param[in] startBytes A pointer to the start bytes data to be detected.
+ * @param[in] sz The size of the start bytes data to be detected.
+ * @return `0` if the operation is successful.
+ * @return `1` if the port is not open.
+ * @return `2` if a timeout occurs.
+ */
+int TCP::receiveStartBytes(const unsigned char *startBytes, size_t sz){
+  size_t i = 0;
+  size_t idxCheck = 0;
+  bool found = false;
+  int ret = 0;
+  std::vector <unsigned char> tmp;
+  bool isRcvFirstBytes = false;
+  do {
+    if (this->remainingData.size() > 0){
+      this->data.assign(this->remainingData.begin(), this->remainingData.end());
+      this->remainingData.clear();
+      ret = 0;
+    }
+    else {
+      ret = this->receiveData(sz, true);
+    }
+    if (!ret){
+      if (isRcvFirstBytes == false){
+        isRcvFirstBytes = true;
+      }
+      else if (tmp.size() > sz){
+        idxCheck = tmp.size() + 1 - sz;
+      }
+      tmp.insert(tmp.end(), this->data.begin(), this->data.end());
+      if (this->remainingData.size() > 0){
+        tmp.insert(tmp.end(), this->remainingData.begin(), this->remainingData.end());
+        this->remainingData.clear();
+      }
+      if (tmp.size() >= sz){
+        for (i = idxCheck; i <= tmp.size() - sz; i++){
+          if (memcmp(tmp.data() + i, startBytes, sz) == 0){
+            found = true;
+            break;
+          }
+        }
+      }
+    }
+  } while(found == false && ret == 0);
+  if (found == true){
+    this->data.clear();
+    this->data.assign(tmp.begin() + i, tmp.begin() + i + sz);
+    if (tmp.size() > i + sz) this->remainingData.assign(tmp.begin() + i + sz, tmp.end());
+  }
+  else {
+    this->data.assign(tmp.begin(), tmp.end());
+  }
+  return ret;
+}
+
+/**
+ * @brief Overloaded method for `receiveStartBytes` with `std::vector` input.
+ *
+ * This overloaded function performs a TCP/IP data reception operation until the specified start bytes are detected. Any TCP/IP data received before the start bytes are found is automatically discarded. The received TCP/IP data can be accessed using the `TCP::getBuffer` method.
+ *
+ * @param[in] startBytes A vector containing the start bytes data to be detected.
+ * @return `0` if the operation is successful.
+ * @return `1` if the port is not open.
+ * @return `2` if a timeout occurs.
+ */
+int TCP::receiveStartBytes(const std::vector <unsigned char> startBytes){
+  return this->receiveStartBytes(startBytes.data(), startBytes.size());
+}
+
+/**
+ * @brief Overloaded method for `receiveStartBytes` with `const char*` input.
+ *
+ * This overloaded function performs a TCP/IP data reception operation until the specified start bytes are detected. Any TCP/IP data received before the start bytes are found is automatically discarded. The received TCP/IP data can be accessed using the `TCP::getBuffer` method.
+ *
+ * @param[in] startBytes A pointer to the start bytes data to be detected, provided as a `const char*`.
+ * @return `0` if the operation is successful.
+ * @return `1` if the port is not open.
+ * @return `2` if a timeout occurs.
+ */
+int TCP::receiveStartBytes(const char *startBytes){
+  return this->receiveStartBytes((const unsigned char *) startBytes, strlen(startBytes));
+}
+
+/**
+ * @brief Overloaded method for `receiveStartBytes` with `std::string` input.
+ *
+ * This overloaded function performs a TCP/IP data reception operation until the specified start bytes are detected. Any TCP/IP data received before the start bytes are found is automatically discarded. The received TCP/IP data can be accessed using the `TCP::getBuffer` method.
+ *
+ * @param[in] startBytes A string containing the start bytes data to be detected.
+ * @return `0` if the operation is successful.
+ * @return `1` if the port is not open.
+ * @return `2` if a timeout occurs.
+ */
+int TCP::receiveStartBytes(const std::string startBytes){
+  return this->receiveStartBytes((const unsigned char *) startBytes.c_str(), startBytes.length());
+}
