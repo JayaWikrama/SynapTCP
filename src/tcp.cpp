@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include "tcp.hpp"
@@ -699,7 +700,7 @@ bool TCP::getIsUseSSL(){
  *
  * @return SSL verify mode status.
  */
-bool getSSLVerifyMode(){
+bool TCP::getSSLVerifyMode(){
 #ifdef __STCP_SSL__
   pthread_mutex_lock(&(this->mtx));
   pthread_mutex_lock(&(this->wmtx));
@@ -713,4 +714,206 @@ bool getSSLVerifyMode(){
 #else
   return false;
 #endif
+}
+
+/**
+ * @brief Initialize TCP/IP Server connection.
+ *
+ * This function attempts to open the specified TCP/IP (socket) port for communication. It initialize the port according to the current settings and prepares it for data transfer.
+ *
+ * @return `0` Initialize process success.
+ * @return `1` if the port fails to open.
+ * @return `2` if failed to allocate connection parameters memory.
+ * @return `3` if failed to bind connection
+ * @return `4` if failed to listen connection
+ * @return `5` if failed to create SSL_CTX (available if SSL layer mode is activated)
+ * @return `6` if failed to use certificate (available if SSL layer mode is activated)
+ * @return `7` if failed to use private key (available if SSL layer mode is activated)
+ * @return `8` if failed to check priate key (available if SSL layer mode is activated)
+ * @return `9` if failed to load verify location (available if SSL layer mode is activated)
+ * @return `10` if failed to load cacert (available if SSL layer mode is activated)
+ */
+int TCP::serverInit(){
+  pthread_mutex_lock(&(this->mtx));
+  pthread_mutex_lock(&(this->wmtx));
+  int retval = 0;
+  const int optVal = 1;
+  const socklen_t optLen = sizeof(optVal);
+  this->sockFd  = socket(AF_INET, SOCK_STREAM, 0);
+  if (this->sockFd <= 0){
+    pthread_mutex_unlock(&(this->mtx));
+    pthread_mutex_unlock(&(this->wmtx));
+    return 1;
+  }
+  memset(&(this->addr), 0x00, sizeof(this->addr));
+  this->addr.sin_family = AF_INET;
+  this->addr.sin_port = (in_port_t) htons(this->port);
+  memcpy(&(this->addr.sin_addr.s_addr), this->address.data(), 4);
+  setsockopt(this->sockFd, SOL_SOCKET, SO_REUSEADDR, (void*) &optVal, optLen);
+  if (bind(this->sockFd, (const struct sockaddr *) &(this->addr), sizeof(this->addr))){
+    close (this->sockFd);
+    this->sockFd = -1;
+    pthread_mutex_unlock(&(this->mtx));
+    pthread_mutex_unlock(&(this->wmtx));
+    return 3;
+  }
+  if (listen(this->sockFd, this->maxClient)){
+    close (this->sockFd);
+    this->sockFd = -1;
+    pthread_mutex_unlock(&(this->mtx));
+    pthread_mutex_unlock(&(this->wmtx));
+    return 4;
+  }
+  pthread_mutex_unlock(&(this->mtx));
+  pthread_mutex_unlock(&(this->wmtx));
+  return 0;
+}
+
+/**
+ * @brief Accept the available client when TCP/IP Server listen the connection.
+ *
+ * This function attempts to accept the connection that requested by client side.
+ *
+ * @return `true` in success.
+ * @return `false` if failed.
+ */
+bool TCP::serverAccept(){
+  pthread_mutex_lock(&(this->mtx));
+  pthread_mutex_lock(&(this->wmtx));
+  this->len = (socklen_t) sizeof(this->addr);
+  this->connFd = accept(this->sockFd, (struct sockaddr *) &(this->addr), &(this->len));
+  if (this->connFd <= 0){
+    pthread_mutex_unlock(&(this->mtx));
+    pthread_mutex_unlock(&(this->wmtx));
+    return false;
+  }
+  if (this->tvTimeout.tv_sec > 0 ||  this->tvTimeout.tv_usec){
+    struct timeval tv;
+    tv.tv_sec = this->tvTimeout.tv_sec;
+    tv.tv_usec = this->tvTimeout.tv_usec;
+    setsockopt(this->connFd, SOL_SOCKET, SO_RCVTIMEO, (const unsigned char *) &tv, sizeof(tv));
+  }
+  pthread_mutex_unlock(&(this->mtx));
+  pthread_mutex_unlock(&(this->wmtx));
+  return true;
+}
+
+/**
+ * @brief Connect to TCP/IP Server with/without timeout.
+ *
+ * This method is called automatically when the `clientInit` method is called.
+ *
+ * @return `true` if success
+ * @return `false` if fail or timeout
+ */
+bool TCP::cliConnect(){
+  if (this->tvTimeout.tv_sec > 0 || this->tvTimeout.tv_usec > 0){
+    int retval = 0;
+    int fcntlFlags = 0;
+	  if ((fcntlFlags = fcntl (this->sockFd, F_GETFL, NULL)) < 0) {
+      return false;
+	  }
+	  if (fcntl (this->sockFd, F_SETFL, fcntlFlags | O_NONBLOCK) < 0) {
+	  	return false;
+	  }
+	  if ((retval = connect (this->sockFd, (struct sockaddr *) &(this->addr), sizeof(this->addr))) < 0) {
+		  if (errno == EINPROGRESS) {
+			  fd_set waitSet;
+			  FD_ZERO (&waitSet);
+			  FD_SET (this->sockFd, &waitSet);
+			  retval = select (this->sockFd + 1, NULL, &waitSet, NULL, &(this->tvTimeout));
+		  }
+	  }
+	  else {
+		  retval = 1;
+	  }
+	  if (fcntl (this->sockFd, F_SETFL, fcntlFlags) < 0) {
+		  return false;
+	  }
+	  if (retval < 0) {
+		  return false;
+	  }
+	  else if (retval == 0) {
+		  errno = ETIMEDOUT;
+		  return false;
+	  }
+	  else {
+		  socklen_t len = sizeof (fcntlFlags);
+		  if (getsockopt (this->sockFd, SOL_SOCKET, SO_ERROR, &fcntlFlags, &len) < 0) {
+			  return false;
+		  }
+		  if (fcntlFlags) {
+			  errno = fcntlFlags;
+			  return false;
+		  }
+	  }
+  }
+  else {
+    while (connect(this->sockFd, (struct sockaddr *) &(this->addr), sizeof(this->addr)) != 0) {
+      usleep(10000); 
+    }
+  }
+  return true;
+}
+
+/**
+ * @brief Initialize TCP/IP Client connection.
+ *
+ * This function attempts to open the specified TCP/IP (socket) port for communication. It initialize the port according to the current settings and prepares it for data transfer.
+ *
+ * @return `0` Initialize process success.
+ * @return `1` if the port fails to open.
+ * @return `2` if failed to allocate connection parameters memory
+ * @return `3` if failed to get hostname ip address
+ * @return `4` if failed to create SSL_CTX (available if SSL layer mode is activated)
+ * @return `5` if failed to use certificate (available if SSL layer mode is activated)
+ * @return `6` if failed to use private key (available if SSL layer mode is activated)
+ * @return `7` if failed to check priate key (available if SSL layer mode is activated)
+ * @return `8` if failed to connect server
+ * @return `9` if failed to connect server with SSL handshake (available if SSL layer mode is activated)
+ */
+int TCP::clientInit(){
+  pthread_mutex_unlock(&(this->mtx));
+  pthread_mutex_unlock(&(this->wmtx));
+  this->sockFd  = socket(AF_INET, SOCK_STREAM, 0);
+  if (this->sockFd <= 0){
+    pthread_mutex_unlock(&(this->mtx));
+    pthread_mutex_unlock(&(this->wmtx));
+    return 2;
+  }
+  memset(&(this->addr), 0x00, sizeof(this->addr));
+  this->addr.sin_family = AF_INET;
+  this->addr.sin_port = (in_port_t) htons(this->port);
+  if(this->isValidIPAddress(this->address) != 0){
+    struct hostent *host = NULL;
+    host = gethostbyname((const char *) this->address.data());
+    if (host != NULL){
+      this->addr.sin_addr.s_addr = inet_addr(inet_ntoa(*((struct in_addr*) host->h_addr_list[0])));
+    }
+    else {
+      close(this->sockFd);
+      pthread_mutex_unlock(&(this->mtx));
+      pthread_mutex_unlock(&(this->wmtx));
+      return 3;
+    }
+  }
+  else {
+    memcpy(&(this->addr.sin_addr.s_addr), this->address.data(), 4);
+  }
+  if (this->tvTimeout.tv_sec > 0 || this->tvTimeout.tv_usec > 0){
+    struct timeval tv;
+    tv.tv_sec = this->tvTimeout.tv_sec;
+    tv.tv_usec = this->tvTimeout.tv_usec;
+    setsockopt(this->sockFd, SOL_SOCKET, SO_RCVTIMEO, (const char*) &(tv), sizeof(tv));
+  }
+  if (this->cliConnect() != true){
+    close(this->sockFd);
+    this->sockFd = -1;
+    pthread_mutex_unlock(&(this->mtx));
+    pthread_mutex_unlock(&(this->wmtx));
+    return 8;
+  }
+  pthread_mutex_unlock(&(this->mtx));
+  pthread_mutex_unlock(&(this->wmtx));
+  return 0;
 }

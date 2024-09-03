@@ -88,6 +88,17 @@ class TCP {
     pthread_mutex_t wmtx;                 /*!< locking mechanism for write method */
     std::vector <unsigned char> data;           /*!< variable that store received data */
     std::vector <unsigned char> remainingData;  /*!< variable that store remaining data */
+
+    /**
+     * @brief Connect to TCP/IP Server with/without timeout.
+     *
+     * This method is called automatically when the `clientInit` method is called.
+     *
+     * @return `true` if success
+     * @return `false` if fail or timeout
+     */
+    bool cliConnect();
+
   public:
     /**
      * @brief Default constructor.
