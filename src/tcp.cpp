@@ -1002,3 +1002,75 @@ bool TCP::duplicate(TCP &obj){
   pthread_mutex_unlock(&(obj.wmtx));
   return true;
 }
+
+/**
+ * @brief Performs a TCP/IP data receive operation.
+ *
+ * This function receives data from the TCP/IP port without separating the successfully received data into the desired size and remaining data. The receive TCP/IP data can be accessed using the `TCP::getBuffer` method.
+ *
+ * @param[in] sz The number of bytes to receive. A value of `0` means that the receiving operation is unlimited (up to the `keepAliveMs` timeout).
+ * @param[in] dontSplitRemainingData A flag to disable automatic data splitting based on the amount of data requested.
+ * @return `0` if the operation is successful.
+ * @return `1` if the port is not open.
+ * @return `2` if a timeout occurs.
+ */
+int TCP::receiveData(size_t sz, bool dontSplitRemainingData){
+  pthread_mutex_lock(&(this->mtx));
+  if (this->connFd <= 0){
+    pthread_mutex_unlock(&(this->mtx));
+    return 1;
+  }
+  ssize_t bytes = 0;
+  int idx = 0;
+  unsigned char tmp[128];
+  this->data.clear();
+  if (this->remainingData.size() > 0){
+    this->data.assign(this->remainingData.begin(), this->remainingData.end());
+    this->remainingData.clear();
+  }
+  do {
+    bytes = read(this->connFd, (void *) tmp, sizeof(tmp));
+    if (bytes > 0){
+      for (idx = 0; idx < bytes; idx++){
+        this->data.push_back(tmp[idx]);
+      }
+    }
+  } while (bytes > 0 && sz == 0);
+  if (this->data.size() == 0){
+    pthread_mutex_unlock(&(this->mtx));
+    return 2;
+  }
+  if (dontSplitRemainingData == false && sz > 0 && this->data.size() > sz){
+    this->remainingData.assign(this->data.begin() + sz, this->data.end());
+    this->data.erase(this->data.begin() + sz, this->data.end());
+  }
+  pthread_mutex_unlock(&(this->mtx));
+  return 0;
+}
+
+/**
+ * @brief Overloaded method for `receiveData` to perform TCP/IP data reception.
+ *
+ * This overloaded method performs a TCP/IP data receiving operation.
+ *
+ * @param[in] sz The number of bytes to receive. A value of `0` means that the receiving operation is unlimited (up to the `keepAliveMs` timeout).
+ * @return `0` if the operation is successful.
+ * @return `1` if the port is not open.
+ * @return `2` if a timeout occurs.
+ */
+int TCP::receiveData(size_t sz){
+  return this->receiveData(sz, false);
+}
+
+/**
+ * @brief Overloaded method for `receiveData` to perform TCP/IP data reception.
+ *
+ * This overloaded method performs a TCP/IP data receiving operation.
+ *
+ * @return `0` if the operation is successful.
+ * @return `1` if the port is not open.
+ * @return `2` if a timeout occurs.
+ */
+int TCP::receiveData(){
+  return this->receiveData(0, false);
+}
