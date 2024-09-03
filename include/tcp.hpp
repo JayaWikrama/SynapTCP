@@ -73,7 +73,7 @@ class TCP {
   protected:
     int sockFd;                           /*!< socket file descriptor */
     int connFd;                           /*!< conn socket file descriptor (have the same value as __sockFd__ in client mode but have the different value in server mode) */
-    unsigned short keepAliveMs            /*!< maximum wait time for receiving the next byte of data after the initial byte has been received */
+    unsigned short keepAliveMs;           /*!< maximum wait time for receiving the next byte of data after the initial byte has been received */
     socklen_t len;                        /*!< type definition for length and size values used by socket related parameters, return values and structure members */
     struct timeval tvTimeout;             /*!< store timeout connection parameters */
     struct sockaddr_in addr;              /*!< structures for handling internet addresses */
@@ -322,17 +322,6 @@ class TCP {
      * @return `false` when the client number is invalid
      */
     bool setMaximumClient(int nClient);
-
-    /**
-     * @brief Sets the communication timeout.
-     *
-     * This setter function configures the timeout for TCP/IP communication. The timeout value is specified in units of 1 seconds.
-     *
-     * @param[in] seconds The timeout value.
-     * @return `true` if the input value is valid.
-     * @return `false` if the input value is invalid.
-     */
-    bool setTimeout(int seconds);
 
     /**
      * @brief Overloaded method in `setTimeout` to sets the communication timeout in milliseconds.

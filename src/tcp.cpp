@@ -3,28 +3,15 @@
 #include "tcp.hpp"
 
 static void __TCP(TCP *obj){
-  obj->maxClient = 10;
-  obj->port = 3000;
-  obj->address.clear();
-  obj->sockFd = -1;
-  obj->connFd = -1;
-  obj->keepAliveMs = 0;
-  memset(&(obj->len), 0x00, sizeof(obj->len));
-  obj->timeout.tv_sec = 1;
-  obj->timeout.tv_usec = 500000;
-  struct sockaddr_in addr;
-  memset(&(obj->addr), 0x00, sizeof(obj->addr));
+  obj->setMaximumClient(10);
+  obj->setPort(3000);
+  obj->setAddress("127.0.0.1");
+  obj->setKeepAliveMs(0);
+  obj->setTimeout(1, 500);
 #ifdef __STCP_SSL__
-  obj->useSSL = false;
-  obj->sslVerifyMode = false;
-  obj->sslConnRoutineOkStatus = 0;
-  obj->sslConn = nullptr;
-  obj->sslCtx = nullptr;
+  obj->setIsUseSSL(false);
+  obj->setSSLVerifyMode(false);
 #endif
-  pthread_mutex_init(&(obj->mtx), nullptr);
-  pthread_mutex_init(&(obj->wmtx), nullptr);
-  obj->data.clear();
-  obj->remainingData.clear();
 }
 
 /**
@@ -40,6 +27,19 @@ static void __TCP(TCP *obj){
  */
 TCP::TCP(){
   __TCP(this);
+  this->sockFd = -1;
+  this->connFd = -1;
+  memset(&(this->len), 0x00, sizeof(this->len));
+  memset(&(this->addr), 0x00, sizeof(this->addr));
+#ifdef __STCP_SSL__
+  this->sslConnRoutineOkStatus = 0;
+  this->sslConn = nullptr;
+  this->sslCtx = nullptr;
+#endif
+  pthread_mutex_init(&(this->mtx), nullptr);
+  pthread_mutex_init(&(this->wmtx), nullptr);
+  this->data.clear();
+  this->remainingData.clear();
 }
 
 /**
@@ -56,6 +56,19 @@ TCP::TCP(){
 TCP::TCP(const unsigned char *address){
   __TCP(this);
   this->setAddress(address);
+  this->sockFd = -1;
+  this->connFd = -1;
+  memset(&(this->len), 0x00, sizeof(this->len));
+  memset(&(this->addr), 0x00, sizeof(this->addr));
+#ifdef __STCP_SSL__
+  this->sslConnRoutineOkStatus = 0;
+  this->sslConn = nullptr;
+  this->sslCtx = nullptr;
+#endif
+  pthread_mutex_init(&(this->mtx), nullptr);
+  pthread_mutex_init(&(this->wmtx), nullptr);
+  this->data.clear();
+  this->remainingData.clear();
 }
 
 /**
@@ -69,10 +82,23 @@ TCP::TCP(const unsigned char *address){
  * @param[in] address The address is in the form of an IP address with a size of 4 bytes.
  * @param[in] port The port of TCP/IP interface.
  */
-TCP(const unsigned char *address, int port){
+TCP::TCP(const unsigned char *address, int port){
   __TCP(this);
   this->setAddress(address);
   this->setPort(port);
+  this->sockFd = -1;
+  this->connFd = -1;
+  memset(&(this->len), 0x00, sizeof(this->len));
+  memset(&(this->addr), 0x00, sizeof(this->addr));
+#ifdef __STCP_SSL__
+  this->sslConnRoutineOkStatus = 0;
+  this->sslConn = nullptr;
+  this->sslCtx = nullptr;
+#endif
+  pthread_mutex_init(&(this->mtx), nullptr);
+  pthread_mutex_init(&(this->wmtx), nullptr);
+  this->data.clear();
+  this->remainingData.clear();
 }
 
 /**
@@ -86,9 +112,22 @@ TCP(const unsigned char *address, int port){
  * - Initializes the mutex for thread safety.
  * @param[in] address The address is in the form of an IP address with a size of 4 bytes.
  */
-TCP(const std::vector <unsigned char> address){
+TCP::TCP(const std::vector <unsigned char> address){
   __TCP(this);
   this->setAddress(address);
+  this->sockFd = -1;
+  this->connFd = -1;
+  memset(&(this->len), 0x00, sizeof(this->len));
+  memset(&(this->addr), 0x00, sizeof(this->addr));
+#ifdef __STCP_SSL__
+  this->sslConnRoutineOkStatus = 0;
+  this->sslConn = nullptr;
+  this->sslCtx = nullptr;
+#endif
+  pthread_mutex_init(&(this->mtx), nullptr);
+  pthread_mutex_init(&(this->wmtx), nullptr);
+  this->data.clear();
+  this->remainingData.clear();
 }
 
 /**
@@ -102,10 +141,23 @@ TCP(const std::vector <unsigned char> address){
  * @param[in] address The address is in the form of an IP address with a size of 4 bytes.
  * @param[in] port The port of TCP/IP interface.
  */
-TCP(const std::vector <unsigned char> address, int port){
+TCP::TCP(const std::vector <unsigned char> address, int port){
   __TCP(this);
   this->setAddress(address);
   this->setPort(port);
+  this->sockFd = -1;
+  this->connFd = -1;
+  memset(&(this->len), 0x00, sizeof(this->len));
+  memset(&(this->addr), 0x00, sizeof(this->addr));
+#ifdef __STCP_SSL__
+  this->sslConnRoutineOkStatus = 0;
+  this->sslConn = nullptr;
+  this->sslCtx = nullptr;
+#endif
+  pthread_mutex_init(&(this->mtx), nullptr);
+  pthread_mutex_init(&(this->wmtx), nullptr);
+  this->data.clear();
+  this->remainingData.clear();
 }
 
 /**
@@ -119,9 +171,22 @@ TCP(const std::vector <unsigned char> address, int port){
  * - Initializes the mutex for thread safety.
  * @param[in] address The address in the form of an IP address or domain (in this case, a string in the form of a char pointer).
  */
-TCP(const char *address){
+TCP::TCP(const char *address){
   __TCP(this);
   this->setAddress(address);
+  this->sockFd = -1;
+  this->connFd = -1;
+  memset(&(this->len), 0x00, sizeof(this->len));
+  memset(&(this->addr), 0x00, sizeof(this->addr));
+#ifdef __STCP_SSL__
+  this->sslConnRoutineOkStatus = 0;
+  this->sslConn = nullptr;
+  this->sslCtx = nullptr;
+#endif
+  pthread_mutex_init(&(this->mtx), nullptr);
+  pthread_mutex_init(&(this->wmtx), nullptr);
+  this->data.clear();
+  this->remainingData.clear();
 }
 
 /**
@@ -135,10 +200,23 @@ TCP(const char *address){
  * @param[in] address The address in the form of an IP address or domain (in this case, a string in the form of a char pointer).
  * @param[in] port The port of TCP/IP interface.
  */
-TCP(const char *address, int port){
+TCP::TCP(const char *address, int port){
   __TCP(this);
   this->setAddress(address);
   this->setPort(port);
+  this->sockFd = -1;
+  this->connFd = -1;
+  memset(&(this->len), 0x00, sizeof(this->len));
+  memset(&(this->addr), 0x00, sizeof(this->addr));
+#ifdef __STCP_SSL__
+  this->sslConnRoutineOkStatus = 0;
+  this->sslConn = nullptr;
+  this->sslCtx = nullptr;
+#endif
+  pthread_mutex_init(&(this->mtx), nullptr);
+  pthread_mutex_init(&(this->wmtx), nullptr);
+  this->data.clear();
+  this->remainingData.clear();
 }
 
 /**
@@ -152,9 +230,22 @@ TCP(const char *address, int port){
  * - Initializes the mutex for thread safety.
  * @param[in] address The address in the form of an IP address or domain (string).
  */
-TCP(const std::string address){
+TCP::TCP(const std::string address){
   __TCP(this);
   this->setAddress(address);
+  this->sockFd = -1;
+  this->connFd = -1;
+  memset(&(this->len), 0x00, sizeof(this->len));
+  memset(&(this->addr), 0x00, sizeof(this->addr));
+#ifdef __STCP_SSL__
+  this->sslConnRoutineOkStatus = 0;
+  this->sslConn = nullptr;
+  this->sslCtx = nullptr;
+#endif
+  pthread_mutex_init(&(this->mtx), nullptr);
+  pthread_mutex_init(&(this->wmtx), nullptr);
+  this->data.clear();
+  this->remainingData.clear();
 }
 
 /**
@@ -168,10 +259,23 @@ TCP(const std::string address){
  * @param[in] address The address in the form of an IP address or domain (string).
  * @param[in] port The port of TCP/IP interface.
  */
-TCP(const std::string address, int port){
+TCP::TCP(const std::string address, int port){
   __TCP(this);
   this->setAddress(address);
   this->setPort(port);
+  this->sockFd = -1;
+  this->connFd = -1;
+  memset(&(this->len), 0x00, sizeof(this->len));
+  memset(&(this->addr), 0x00, sizeof(this->addr));
+#ifdef __STCP_SSL__
+  this->sslConnRoutineOkStatus = 0;
+  this->sslConn = nullptr;
+  this->sslCtx = nullptr;
+#endif
+  pthread_mutex_init(&(this->mtx), nullptr);
+  pthread_mutex_init(&(this->wmtx), nullptr);
+  this->data.clear();
+  this->remainingData.clear();
 }
 
 /**
@@ -204,7 +308,7 @@ bool TCP::isValidIPAddress(const unsigned char *address){
  * @return `false` when the IP Address is invalid
  */
 bool TCP::isValidIPAddress(const std::vector <unsigned char> address){
-  if (address.size != 4) return false;
+  if (address.size() != 4) return false;
   return this->isValidIPAddress(address.data());
 }
 
@@ -304,7 +408,7 @@ bool TCP::setAddress(const std::vector <unsigned char> address){
  * @return `false` when the Address is invalid
  */
 bool TCP::setAddress(const std::string address){
-  return this->setAddress(address.c_str())
+  return this->setAddress(address.c_str());
 }
 
 /**
@@ -347,4 +451,114 @@ bool TCP::setPort(int port){
   if (port < 0 && port > 65535) return false;
   this->port = port;
   return true;
+}
+
+/**
+ * @brief Set the maximum clients that the TCP/IP Server can handle.
+ *
+ * This method is responsible for setting the maximum number of clients that the TCP/IP Server can handle. This method only for server side.
+ *
+ * @param[in] nClient the maximum number of clients.
+ * @return `true` when the client number is valid
+ * @return `false` when the client number is invalid
+ */
+bool TCP::setMaximumClient(int nClient){
+  if (nClient < 1 || nClient > 65535) return false;
+  this->maxClient = nClient;
+  return true;
+}
+
+/**
+ * @brief Overloaded method in `setTimeout` to sets the communication timeout in milliseconds.
+ *
+ * This setter function configures the timeout for TCP/IP communication. The timeout value is specified in units of 1 milliseconds.
+ *
+ * @param[in] milliseconds The timeout value.
+ * @return `true` if the input value is valid.
+ * @return `false` if the input value is invalid.
+ */
+bool TCP::setTimeout(int milliseconds){
+  if (milliseconds < 0) return false;
+  if (milliseconds < 1000){
+    this->tvTimeout.tv_usec = milliseconds * 1000;
+    this->tvTimeout.tv_sec = 0;
+  }
+  else {
+    this->tvTimeout.tv_sec = milliseconds / 1000;
+    this->tvTimeout.tv_usec = (milliseconds % 1000) * 1000;
+  }
+  return true;
+}
+
+/**
+ * @brief Overloaded method in `setTimeout` to sets the communication timeout in seconds and milliseconds.
+ *
+ * This setter function configures the timeout for TCP/IP communication. The timeout value is specified in units of 1 seconds and 1 milliseconds.
+ *
+ * @param[in] seconds The timeout value in seconds.
+ * @param[in] milliseconds The timeout value in milliseconds.
+ * @return `true` if the input value is valid.
+ * @return `false` if the input value is invalid.
+ */
+bool TCP::setTimeout(int seconds, int milliseconds){
+  if (seconds < 0 || milliseconds < 0 || milliseconds > 999) return false;
+  this->tvTimeout.tv_sec = seconds;
+  this->tvTimeout.tv_usec = milliseconds * 1000;
+  return true;
+}
+
+/**
+ * @brief Sets the keep-alive interval for communication.
+ *
+ * This setter function configures the maximum wait time for receiving the next byte of data after the initial byte has been received. This helps maintain the connection by ensuring timely data reception.
+ *
+ * @param keepAliveMs The keep-alive interval in milliseconds.
+ */
+bool TCP::setKeepAliveMs(int keepAliveMs){
+  if (keepAliveMs < 0) return false;
+  this->keepAliveMs = keepAliveMs;
+  return true;
+}
+
+/**
+ * @brief Sets the SSL protection mode (is activated or not).
+ *
+ * This setter function configures the use of SSL handshake. This helps to improve the security of TCP/IP communication.
+ *
+ * @param[in] isUseSSL The value true is assigned to enable SSL handshake.
+ * @return `true` when success.
+ * @return `false` when failed (if the SSL preprocessor is not enabled)
+ */
+bool TCP::setIsUseSSL(bool isUseSSL){
+#ifdef __STCP_SSL__
+  if (this->isUseSSL == false || isUseSSL == false){
+    this->sslVerifyMode = false;
+  }
+  this->isUseSSL = isUseSSL; 
+  return true;
+#else
+  return false;
+#endif
+}
+
+/**
+ * @brief Sets the SSL verify mode (is activated or not).
+ *
+ * This setter function configures the use of SSL verify mode.
+ *
+ * @param[in] sslVerifyMode The value true is assigned to enable SSL verify mode.
+ * @return `true` when success.
+ * @return `false` when failed (if the SSL preprocessor is not enabled or SSL handshake is not enabled)
+ */
+bool TCP::setSSLVerifyMode(bool sslVerifyMode){
+#ifdef __STCP_SSL__
+  if (this->isUseSSL == false){
+    this->sslVerifyMode = false;
+    return false;
+  }
+  this->sslVerifyMode = sslVerifyMode;
+  return true;
+#else
+  return false;
+#endif
 }
