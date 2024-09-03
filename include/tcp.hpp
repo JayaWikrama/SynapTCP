@@ -64,6 +64,10 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <arpa/inet.h>
+#include <pthread.h>
+#ifdef __STCP_SSL__
+#include <openssl/ssl.h>
+#endif
 
 class TCP {
   private:
@@ -389,6 +393,28 @@ class TCP {
     bool setSSLVerifyMode(bool sslVerifyMode);
 
     /**
+     * @brief Sets the SSL CTX pointer.
+     *
+     * This setter function assign the SSL CTX pointer.
+     *
+     * @param[in] sslCtx pointer.
+     * @return `true` when success.
+     * @return `false` when failed (if the SSL preprocessor is not enabled)
+     */
+    bool setSSLCTXPointer(SSL_CTX *sslCtx);
+
+    /**
+     * @brief Sets the SSL pointer.
+     *
+     * This setter function assign the SSL pointer.
+     *
+     * @param[in] sslConn pointer.
+     * @return `true` when success.
+     * @return `false` when failed (if the SSL preprocessor is not enabled)
+     */
+    bool setSSLPointer(SSL *sslConn);
+
+    /**
      * @brief Gets the address of TCP/IP communication interface.
      *
      * This getter function retrieves address currently configured for TCP/IP communication interface.
@@ -499,9 +525,11 @@ class TCP {
     int clientInit();
 
     /**
-     * @brief duplicate socket and all its parameters.
+     * @brief duplicate socket and its parameters.
      *
-     * This function is responsible for duplicating all the parameters of its parent object.
+     * This function is responsible for duplicating all the parameters of its parent object except for SSL pointers.
+     * Both objects use the same SSL pointer. So before deleting one of the objects, make sure to assign the SSL pointer
+     * from one of the objects to the NULL value.
      *
      * @param[in] obj The target object.
      * @return `true` in success.

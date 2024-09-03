@@ -566,10 +566,10 @@ bool TCP::setIsUseSSL(bool isUseSSL){
 #ifdef __STCP_SSL__
   pthread_mutex_lock(&(this->mtx));
   pthread_mutex_lock(&(this->wmtx));
-  if (this->isUseSSL == false || isUseSSL == false){
+  if (this->useSSL == false || isUseSSL == false){
     this->sslVerifyMode = false;
   }
-  this->isUseSSL = isUseSSL;
+  this->useSSL = isUseSSL;
   pthread_mutex_unlock(&(this->mtx));
   pthread_mutex_unlock(&(this->wmtx));
   return true;
@@ -591,13 +591,57 @@ bool TCP::setSSLVerifyMode(bool sslVerifyMode){
 #ifdef __STCP_SSL__
   pthread_mutex_lock(&(this->mtx));
   pthread_mutex_lock(&(this->wmtx));
-  if (this->isUseSSL == false){
+  if (this->useSSL == false){
     this->sslVerifyMode = false;
     pthread_mutex_unlock(&(this->mtx));
     pthread_mutex_unlock(&(this->wmtx));
     return false;
   }
   this->sslVerifyMode = sslVerifyMode;
+  pthread_mutex_unlock(&(this->mtx));
+  pthread_mutex_unlock(&(this->wmtx));
+  return true;
+#else
+  return false;
+#endif
+}
+
+/**
+ * @brief Sets the SSL CTX pointer.
+ *
+ * This setter function assign the SSL CTX pointer.
+ *
+ * @param[in] sslCtx pointer.
+ * @return `true` when success.
+ * @return `false` when failed (if the SSL preprocessor is not enabled)
+ */
+bool TCP::setSSLCTXPointer(SSL_CTX *sslCtx){
+#ifdef __STCP_SSL__
+  pthread_mutex_lock(&(this->mtx));
+  pthread_mutex_lock(&(this->wmtx));
+  this->sslCtx = sslCtx;
+  pthread_mutex_unlock(&(this->mtx));
+  pthread_mutex_unlock(&(this->wmtx));
+  return true;
+#else
+  return false;
+#endif
+}
+
+/**
+ * @brief Sets the SSL pointer.
+ *
+ * This setter function assign the SSL pointer.
+ *
+ * @param[in] sslConn pointer.
+ * @return `true` when success.
+ * @return `false` when failed (if the SSL preprocessor is not enabled)
+ */
+bool TCP::setSSLPointer(SSL *sslConn){
+#ifdef __STCP_SSL__
+  pthread_mutex_lock(&(this->mtx));
+  pthread_mutex_lock(&(this->wmtx));
+  this->sslConn = sslConn;
   pthread_mutex_unlock(&(this->mtx));
   pthread_mutex_unlock(&(this->wmtx));
   return true;
@@ -687,7 +731,7 @@ int TCP::getKeepAliveMs(){
  */
 bool TCP::getIsUseSSL(){
 #ifdef __STCP_SSL__
-  return this->isUseSSL;
+  return this->useSSL;
 #else
   return false;
 #endif
@@ -705,7 +749,7 @@ bool TCP::getSSLVerifyMode(){
   pthread_mutex_lock(&(this->mtx));
   pthread_mutex_lock(&(this->wmtx));
   bool result = false;
-  if (this->isUseSSL){
+  if (this->useSSL){
     result = this->sslVerifyMode;
   }
   pthread_mutex_unlock(&(this->mtx));
@@ -916,4 +960,45 @@ int TCP::clientInit(){
   pthread_mutex_unlock(&(this->mtx));
   pthread_mutex_unlock(&(this->wmtx));
   return 0;
+}
+
+/**
+ * @brief duplicate socket and its parameters.
+ *
+ * This function is responsible for duplicating all the parameters of its parent object except for SSL pointers.
+ * Both objects use the same SSL pointer. So before deleting one of the objects, make sure to assign the SSL pointer
+ * from one of the objects to the NULL value.
+ *
+ * @param[in] obj The target object.
+ * @return `true` in success.
+ * @return `false` if failed.
+ */
+bool TCP::duplicate(TCP &obj){
+  pthread_mutex_lock(&(this->mtx));
+  pthread_mutex_lock(&(this->wmtx));
+  pthread_mutex_lock(&(obj.mtx));
+  pthread_mutex_lock(&(obj.wmtx));
+  obj.maxClient = this->maxClient;
+  obj.port = this->port;
+  obj.address.assign(this->address.begin(), this->address.end());
+  obj.sockFd = this->sockFd;
+  obj.connFd = this->connFd;
+  obj.keepAliveMs = this->keepAliveMs;
+  obj.len = this->len;
+  memcpy(&(obj.tvTimeout), &(this->tvTimeout), sizeof(obj.tvTimeout));
+  memcpy(&(obj.addr), &(this->addr), sizeof(obj.addr));
+#ifdef __STCP_SSL__
+  obj.useSSL = this->useSSL;
+  obj.sslVerifyMode = this->sslVerifyMode;
+  obj.sslConnRoutineOkStatus = this->sslConnRoutineOkStatus;
+  obj.sslCtx = this->sslCtx;
+  obj.sslConn = this->sslConn;
+#endif
+  obj.data.assign(this->data.begin(), this->data.end());
+  obj.remainingData.assign(this->remainingData.begin(), this->remainingData.end());
+  pthread_mutex_unlock(&(this->mtx));
+  pthread_mutex_unlock(&(this->wmtx));
+  pthread_mutex_unlock(&(obj.mtx));
+  pthread_mutex_unlock(&(obj.wmtx));
+  return true;
 }
