@@ -26,6 +26,8 @@ static void __TCP(TCP *obj){
  * - Initializes the mutex for thread safety.
  */
 TCP::TCP(){
+  pthread_mutex_init(&(this->mtx), nullptr);
+  pthread_mutex_init(&(this->wmtx), nullptr);
   __TCP(this);
   this->sockFd = -1;
   this->connFd = -1;
@@ -36,8 +38,6 @@ TCP::TCP(){
   this->sslConn = nullptr;
   this->sslCtx = nullptr;
 #endif
-  pthread_mutex_init(&(this->mtx), nullptr);
-  pthread_mutex_init(&(this->wmtx), nullptr);
   this->data.clear();
   this->remainingData.clear();
 }
@@ -54,6 +54,8 @@ TCP::TCP(){
  * @param[in] address The address is in the form of an IP address with a size of 4 bytes.
  */
 TCP::TCP(const unsigned char *address){
+  pthread_mutex_init(&(this->mtx), nullptr);
+  pthread_mutex_init(&(this->wmtx), nullptr);
   __TCP(this);
   this->setAddress(address);
   this->sockFd = -1;
@@ -65,8 +67,6 @@ TCP::TCP(const unsigned char *address){
   this->sslConn = nullptr;
   this->sslCtx = nullptr;
 #endif
-  pthread_mutex_init(&(this->mtx), nullptr);
-  pthread_mutex_init(&(this->wmtx), nullptr);
   this->data.clear();
   this->remainingData.clear();
 }
@@ -83,6 +83,8 @@ TCP::TCP(const unsigned char *address){
  * @param[in] port The port of TCP/IP interface.
  */
 TCP::TCP(const unsigned char *address, int port){
+  pthread_mutex_init(&(this->mtx), nullptr);
+  pthread_mutex_init(&(this->wmtx), nullptr);
   __TCP(this);
   this->setAddress(address);
   this->setPort(port);
@@ -95,8 +97,6 @@ TCP::TCP(const unsigned char *address, int port){
   this->sslConn = nullptr;
   this->sslCtx = nullptr;
 #endif
-  pthread_mutex_init(&(this->mtx), nullptr);
-  pthread_mutex_init(&(this->wmtx), nullptr);
   this->data.clear();
   this->remainingData.clear();
 }
@@ -113,6 +113,8 @@ TCP::TCP(const unsigned char *address, int port){
  * @param[in] address The address is in the form of an IP address with a size of 4 bytes.
  */
 TCP::TCP(const std::vector <unsigned char> address){
+  pthread_mutex_init(&(this->mtx), nullptr);
+  pthread_mutex_init(&(this->wmtx), nullptr);
   __TCP(this);
   this->setAddress(address);
   this->sockFd = -1;
@@ -124,8 +126,6 @@ TCP::TCP(const std::vector <unsigned char> address){
   this->sslConn = nullptr;
   this->sslCtx = nullptr;
 #endif
-  pthread_mutex_init(&(this->mtx), nullptr);
-  pthread_mutex_init(&(this->wmtx), nullptr);
   this->data.clear();
   this->remainingData.clear();
 }
@@ -142,6 +142,8 @@ TCP::TCP(const std::vector <unsigned char> address){
  * @param[in] port The port of TCP/IP interface.
  */
 TCP::TCP(const std::vector <unsigned char> address, int port){
+  pthread_mutex_init(&(this->mtx), nullptr);
+  pthread_mutex_init(&(this->wmtx), nullptr);
   __TCP(this);
   this->setAddress(address);
   this->setPort(port);
@@ -154,8 +156,6 @@ TCP::TCP(const std::vector <unsigned char> address, int port){
   this->sslConn = nullptr;
   this->sslCtx = nullptr;
 #endif
-  pthread_mutex_init(&(this->mtx), nullptr);
-  pthread_mutex_init(&(this->wmtx), nullptr);
   this->data.clear();
   this->remainingData.clear();
 }
@@ -172,6 +172,8 @@ TCP::TCP(const std::vector <unsigned char> address, int port){
  * @param[in] address The address in the form of an IP address or domain (in this case, a string in the form of a char pointer).
  */
 TCP::TCP(const char *address){
+  pthread_mutex_init(&(this->mtx), nullptr);
+  pthread_mutex_init(&(this->wmtx), nullptr);
   __TCP(this);
   this->setAddress(address);
   this->sockFd = -1;
@@ -183,8 +185,6 @@ TCP::TCP(const char *address){
   this->sslConn = nullptr;
   this->sslCtx = nullptr;
 #endif
-  pthread_mutex_init(&(this->mtx), nullptr);
-  pthread_mutex_init(&(this->wmtx), nullptr);
   this->data.clear();
   this->remainingData.clear();
 }
@@ -201,6 +201,8 @@ TCP::TCP(const char *address){
  * @param[in] port The port of TCP/IP interface.
  */
 TCP::TCP(const char *address, int port){
+  pthread_mutex_init(&(this->mtx), nullptr);
+  pthread_mutex_init(&(this->wmtx), nullptr);
   __TCP(this);
   this->setAddress(address);
   this->setPort(port);
@@ -213,8 +215,6 @@ TCP::TCP(const char *address, int port){
   this->sslConn = nullptr;
   this->sslCtx = nullptr;
 #endif
-  pthread_mutex_init(&(this->mtx), nullptr);
-  pthread_mutex_init(&(this->wmtx), nullptr);
   this->data.clear();
   this->remainingData.clear();
 }
@@ -231,6 +231,8 @@ TCP::TCP(const char *address, int port){
  * @param[in] address The address in the form of an IP address or domain (string).
  */
 TCP::TCP(const std::string address){
+  pthread_mutex_init(&(this->mtx), nullptr);
+  pthread_mutex_init(&(this->wmtx), nullptr);
   __TCP(this);
   this->setAddress(address);
   this->sockFd = -1;
@@ -242,8 +244,6 @@ TCP::TCP(const std::string address){
   this->sslConn = nullptr;
   this->sslCtx = nullptr;
 #endif
-  pthread_mutex_init(&(this->mtx), nullptr);
-  pthread_mutex_init(&(this->wmtx), nullptr);
   this->data.clear();
   this->remainingData.clear();
 }
@@ -260,6 +260,8 @@ TCP::TCP(const std::string address){
  * @param[in] port The port of TCP/IP interface.
  */
 TCP::TCP(const std::string address, int port){
+  pthread_mutex_init(&(this->mtx), nullptr);
+  pthread_mutex_init(&(this->wmtx), nullptr);
   __TCP(this);
   this->setAddress(address);
   this->setPort(port);
@@ -272,8 +274,6 @@ TCP::TCP(const std::string address, int port){
   this->sslConn = nullptr;
   this->sslCtx = nullptr;
 #endif
-  pthread_mutex_init(&(this->mtx), nullptr);
-  pthread_mutex_init(&(this->wmtx), nullptr);
   this->data.clear();
   this->remainingData.clear();
 }
@@ -379,7 +379,11 @@ bool TCP::isValidIPAddress(const std::string address){
  */
 bool TCP::setAddress(const unsigned char *address){
   if (this->isValidIPAddress(address) == false) return false;
+  pthread_mutex_lock(&(this->mtx));
+  pthread_mutex_lock(&(this->wmtx));
   this->address.assign(address, address + 4);
+  pthread_mutex_unlock(&(this->mtx));
+  pthread_mutex_unlock(&(this->wmtx));
   return true;
 }
 
@@ -394,7 +398,11 @@ bool TCP::setAddress(const unsigned char *address){
  */
 bool TCP::setAddress(const std::vector <unsigned char> address){
   if (this->isValidIPAddress(address) == false) return false;
+  pthread_mutex_lock(&(this->mtx));
+  pthread_mutex_lock(&(this->wmtx));
   this->address.assign(address.begin(), address.end());
+  pthread_mutex_unlock(&(this->mtx));
+  pthread_mutex_unlock(&(this->wmtx));
   return true;
 }
 
@@ -422,6 +430,8 @@ bool TCP::setAddress(const std::string address){
  */
 bool TCP::setAddress(const char *address){
   if (this->isValidIPAddress(address) == false) return false;
+  pthread_mutex_lock(&(this->mtx));
+  pthread_mutex_lock(&(this->wmtx));
   unsigned char tmp = 0x00;
   this->address.clear();
   do {
@@ -435,6 +445,8 @@ bool TCP::setAddress(const char *address){
     address++;
   } while (*address != 0x00);
   this->address.push_back(tmp);
+  pthread_mutex_unlock(&(this->mtx));
+  pthread_mutex_unlock(&(this->wmtx));
   return true;
 }
 
@@ -449,7 +461,11 @@ bool TCP::setAddress(const char *address){
  */
 bool TCP::setPort(int port){
   if (port < 0 && port > 65535) return false;
+  pthread_mutex_lock(&(this->mtx));
+  pthread_mutex_lock(&(this->wmtx));
   this->port = port;
+  pthread_mutex_unlock(&(this->mtx));
+  pthread_mutex_unlock(&(this->wmtx));
   return true;
 }
 
@@ -464,7 +480,11 @@ bool TCP::setPort(int port){
  */
 bool TCP::setMaximumClient(int nClient){
   if (nClient < 1 || nClient > 65535) return false;
+  pthread_mutex_lock(&(this->mtx));
+  pthread_mutex_lock(&(this->wmtx));
   this->maxClient = nClient;
+  pthread_mutex_unlock(&(this->mtx));
+  pthread_mutex_unlock(&(this->wmtx));
   return true;
 }
 
@@ -479,6 +499,8 @@ bool TCP::setMaximumClient(int nClient){
  */
 bool TCP::setTimeout(int milliseconds){
   if (milliseconds < 0) return false;
+  pthread_mutex_lock(&(this->mtx));
+  pthread_mutex_lock(&(this->wmtx));
   if (milliseconds < 1000){
     this->tvTimeout.tv_usec = milliseconds * 1000;
     this->tvTimeout.tv_sec = 0;
@@ -487,6 +509,8 @@ bool TCP::setTimeout(int milliseconds){
     this->tvTimeout.tv_sec = milliseconds / 1000;
     this->tvTimeout.tv_usec = (milliseconds % 1000) * 1000;
   }
+  pthread_mutex_unlock(&(this->mtx));
+  pthread_mutex_unlock(&(this->wmtx));
   return true;
 }
 
@@ -502,8 +526,12 @@ bool TCP::setTimeout(int milliseconds){
  */
 bool TCP::setTimeout(int seconds, int milliseconds){
   if (seconds < 0 || milliseconds < 0 || milliseconds > 999) return false;
+  pthread_mutex_lock(&(this->mtx));
+  pthread_mutex_lock(&(this->wmtx));
   this->tvTimeout.tv_sec = seconds;
   this->tvTimeout.tv_usec = milliseconds * 1000;
+  pthread_mutex_unlock(&(this->mtx));
+  pthread_mutex_unlock(&(this->wmtx));
   return true;
 }
 
@@ -516,7 +544,11 @@ bool TCP::setTimeout(int seconds, int milliseconds){
  */
 bool TCP::setKeepAliveMs(int keepAliveMs){
   if (keepAliveMs < 0) return false;
+  pthread_mutex_lock(&(this->mtx));
+  pthread_mutex_lock(&(this->wmtx));
   this->keepAliveMs = keepAliveMs;
+  pthread_mutex_unlock(&(this->mtx));
+  pthread_mutex_unlock(&(this->wmtx));
   return true;
 }
 
@@ -531,10 +563,14 @@ bool TCP::setKeepAliveMs(int keepAliveMs){
  */
 bool TCP::setIsUseSSL(bool isUseSSL){
 #ifdef __STCP_SSL__
+  pthread_mutex_lock(&(this->mtx));
+  pthread_mutex_lock(&(this->wmtx));
   if (this->isUseSSL == false || isUseSSL == false){
     this->sslVerifyMode = false;
   }
-  this->isUseSSL = isUseSSL; 
+  this->isUseSSL = isUseSSL;
+  pthread_mutex_unlock(&(this->mtx));
+  pthread_mutex_unlock(&(this->wmtx));
   return true;
 #else
   return false;
@@ -552,13 +588,20 @@ bool TCP::setIsUseSSL(bool isUseSSL){
  */
 bool TCP::setSSLVerifyMode(bool sslVerifyMode){
 #ifdef __STCP_SSL__
+  pthread_mutex_lock(&(this->mtx));
+  pthread_mutex_lock(&(this->wmtx));
   if (this->isUseSSL == false){
     this->sslVerifyMode = false;
+    pthread_mutex_unlock(&(this->mtx));
+    pthread_mutex_unlock(&(this->wmtx));
     return false;
   }
   this->sslVerifyMode = sslVerifyMode;
+  pthread_mutex_unlock(&(this->mtx));
+  pthread_mutex_unlock(&(this->wmtx));
   return true;
 #else
   return false;
 #endif
 }
+
