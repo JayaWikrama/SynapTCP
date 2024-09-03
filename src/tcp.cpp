@@ -1176,3 +1176,216 @@ int TCP::receiveStartBytes(const char *startBytes){
 int TCP::receiveStartBytes(const std::string startBytes){
   return this->receiveStartBytes((const unsigned char *) startBytes.c_str(), startBytes.length());
 }
+
+/**
+ * @brief Performs a TCP/IP data receiving operation until the specified stop bytes are detected.
+ *
+ * This function receives TCP/IP data until the specified stop bytes are detected. Any TCP/IP data received up to and including the stop bytes is automatically stored in the buffer. The received TCP/IP data can be accessed using the `TCP::getBuffer` method.
+ *
+ * @param[in] stopBytes The data representing the stop bytes to be detected.
+ * @param[in] sz The size of the stop bytes data to be detected.
+ * @return `0` if the operation is successful.
+ * @return `1` if the port is not open.
+ * @return `2` if a timeout occurs.
+ */
+int TCP::receiveUntillStopBytes(const unsigned char *stopBytes, size_t sz){
+  size_t i = 0;
+  size_t idxCheck = 0;
+  bool found = false;
+  int ret = 0;
+  std::vector <unsigned char> tmp;
+  bool isRcvFirstBytes = false;
+  do {
+    if (this->remainingData.size() > 0){
+      this->data.assign(this->remainingData.begin(), this->remainingData.end());
+      this->remainingData.clear();
+      ret = 0;
+    }
+    else {
+      ret = this->receiveData(sz, true);
+    }
+    if (!ret){
+      if (isRcvFirstBytes == false){
+        isRcvFirstBytes = true;
+      }
+      else if (tmp.size() > sz){
+        idxCheck = tmp.size() + 1 - sz;
+      }
+      tmp.insert(tmp.end(), this->data.begin(), this->data.end());
+      if (this->remainingData.size() > 0){
+        tmp.insert(tmp.end(), this->remainingData.begin(), this->remainingData.end());
+        this->remainingData.clear();
+      }
+      if (tmp.size() >= sz){
+        for (i = idxCheck; i <= tmp.size() - sz; i++){
+          if (memcmp(tmp.data() + i, stopBytes, sz) == 0){
+            found = true;
+            break;
+          }
+        }
+      }
+    }
+  } while(found == false && ret == 0);
+  if (tmp.size() < sz){
+    this->data.assign(tmp.begin(), tmp.end());
+    return 2;
+  }
+  if (this->data.size() != tmp.size()){
+    this->data.clear();
+    this->data.assign(tmp.begin(), tmp.begin() + i + sz);
+    if (tmp.size() > i + sz) this->remainingData.assign(tmp.begin() + i + sz, tmp.end());
+    return 0;
+  }
+  if (this->data.size() > i + sz){
+    this->remainingData.assign(this->data.begin() + i + sz, this->data.end());
+    this->data.erase(this->data.begin() + i + sz, this->data.end());
+  }
+  return ret;
+}
+
+/**
+ * @brief Overloaded function for `receiveUntillStopBytes` with input as `std::vector`.
+ *
+ * This function receives TCP/IP data until the specified stop bytes are detected. Any TCP/IP data received up to and including the stop bytes is automatically stored in the buffer. The received TCP/IP data can be accessed using the `TCP::getBuffer` method.
+ *
+ * @param[in] stopBytes A vector of `unsigned char` representing the stop bytes to be detected.
+ * @return `0` if the operation is successful.
+ * @return `1` if the port is not open.
+ * @return `2` if a timeout occurs.
+ */
+int TCP::receiveUntillStopBytes(const std::vector <unsigned char> stopBytes){
+  return this->receiveUntillStopBytes(stopBytes.data(), stopBytes.size());
+}
+
+/**
+ * @brief Overloaded function for `receiveUntillStopBytes` with input as `const char*`.
+ *
+ * This function receives TCP/IP data until the specified stop bytes are detected. Any TCP/IP data received up to and including the stop bytes is automatically stored in the buffer. The received TCP/IP data can be accessed using the `TCP::getBuffer` method.
+ *
+ * @param[in] stopBytes A pointer to a null-terminated character array representing the stop bytes to be detected.
+ * @return `0` if the operation is successful.
+ * @return `1` if the port is not open.
+ * @return `2` if a timeout occurs.
+ */
+int TCP::receiveUntillStopBytes(const char *stopBytes){
+  return this->receiveUntillStopBytes((const unsigned char *) stopBytes, strlen(stopBytes));
+}
+
+/**
+ * @brief Overloaded function for `receiveUntillStopBytes` with input as `std::string`.
+ *
+ * This function receives TCP/IP data until the specified stop bytes are detected. Any TCP/IP data received up to and including the stop bytes is automatically stored in the buffer. The received TCP/IP data can be accessed using the `TCP::getBuffer` method.
+ *
+ * @param[in] stopBytes A string representing the stop bytes to be detected.
+ * @return `0` if the operation is successful.
+ * @return `1` if the port is not open.
+ * @return `2` if a timeout occurs.
+ */
+int TCP::receiveUntillStopBytes(const std::string stopBytes){
+  return this->receiveUntillStopBytes((const unsigned char *) stopBytes.c_str(), stopBytes.length());
+}
+
+/**
+ * @brief Receive TCP/IP data and checks if the data matches the specified stop bytes.
+ *
+ * This method performs TCP/IP data reception while simultaneously checking if the data matches the desired stop bytes. The received TCP/IP data can be accessed using the `TCP::getBuffer` method.
+ *
+ * @param[in] stopBytes A pointer to the stop bytes data to be detected.
+ * @param[in] sz The size of the stop bytes data to be detected.
+ * @return `0` if the operation is successful and the data is valid.
+ * @return `1` if the port is not open.
+ * @return `2` if a timeout occurs.
+ * @return `3` if data is recieved but does not match the specified stop bytes.
+ */
+int TCP::receiveStopBytes(const unsigned char *stopBytes, size_t sz){
+  bool found = false;
+  int ret = 0;
+  std::vector <unsigned char> tmp;
+  do {
+    if (this->remainingData.size() > 0){
+      this->data.assign(this->remainingData.begin(), this->remainingData.end());
+      this->remainingData.clear();
+      ret = 0;
+    }
+    else {
+      ret = this->receiveData(sz - tmp.size(), true);
+    }
+    if (!ret){
+      tmp.insert(tmp.end(), this->data.begin(), this->data.end());
+      if (this->remainingData.size() > 0){
+        tmp.insert(tmp.end(), this->remainingData.begin(), this->remainingData.end());
+        this->remainingData.clear();
+      }
+      if (tmp.size() >= sz){
+        if (memcmp(tmp.data(), stopBytes, sz) == 0){
+          found = true;
+        }
+        break;
+      }
+    }
+  } while(ret == 0);
+  if (tmp.size() < sz){
+    this->data.assign(tmp.begin(), tmp.end());
+    return 2;
+  }
+  if (found == false){
+    this->data.assign(tmp.begin(), tmp.end());
+    return 3;
+  }
+  if (this->data.size() != tmp.size()){
+    this->data.clear();
+    this->data.assign(tmp.begin(), tmp.begin() + sz);
+    if (tmp.size() > sz) this->remainingData.assign(tmp.begin() + sz, tmp.end());
+    return 0;
+  }
+  if (this->data.size() > sz){
+    this->remainingData.assign(this->data.begin() + sz, this->data.end());
+    this->data.erase(this->data.begin() + sz, this->data.end());
+  }
+  return ret;
+}
+
+/**
+ * @brief Function overloading for `receiveStopBytes` with input using `std::vector`.
+ *
+ * This method performs TCP/IP data reception while simultaneously checking if the data matches the desired stop bytes. The received TCP/IP data can be accessed using the `TCP::getBuffer` method.
+ *
+ * @param[in] stopBytes A `std::vector` containing the stop bytes data to be detected.
+ * @return `0` if the operation is successful and the data is valid.
+ * @return `1` if the port is not open.
+ * @return `2` if a timeout occurs.
+ * @return `3` if data is received but does not match the specified stop bytes.
+ */
+int TCP::receiveStopBytes(const std::vector <unsigned char> stopBytes){
+  return this->receiveStopBytes(stopBytes.data(), stopBytes.size());
+}
+
+/**
+ * @brief Function overloading for `receiveStopBytes` with input using `char *`.
+ *
+ * This method performs TCP/IP data reception while simultaneously checking if the data matches the desired stop bytes. The received TCP/IP data can be accessed using the `TCP::getBuffer` method.
+ *
+ * @param[in] stopBytes A C-style string (null-terminated) representing the stop bytes to be detected.
+ * @return `0` if the operation is successful and the data is valid.
+ * @return `1` if the port is not open.
+ * @return `2` if a timeout occurs.
+ * @return `3` if data is received but does not match the specified stop bytes.
+ */
+int TCP::receiveStopBytes(const char *stopBytes){
+  return this->receiveStopBytes((const unsigned char *) stopBytes, strlen(stopBytes));
+}
+
+/**
+ * @brief Function overloading for `receiveStopBytes` with input using `std::string`.
+ *
+ * This method performs TCP/IP data reception while simultaneously checking if the data matches the desired stop bytes. The received TCP/IP data can be accessed using the `TCP::getBuffer` method.
+ *
+ * @param[in] stopBytes A `std::string` object representing the stop bytes to be detected.
+ * @return `0` if the operation is successful and the data is valid.
+ * @return `1` if the port is not open.
+ * @return `2` if a timeout occurs.
+ * @return `3` if data is received but does not match the specified stop bytes.
+ */
+int TCP::receiveStopBytes(const std::string stopBytes){
+  return this->receiveStopBytes((const unsigned char *) stopBytes.c_str(), stopBytes.length());
+}
