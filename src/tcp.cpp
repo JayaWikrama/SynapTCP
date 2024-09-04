@@ -606,6 +606,7 @@ bool TCP::setSSLVerifyMode(bool sslVerifyMode){
 #endif
 }
 
+#ifdef __STCP_SSL__
 /**
  * @brief Sets the SSL CTX pointer.
  *
@@ -616,16 +617,12 @@ bool TCP::setSSLVerifyMode(bool sslVerifyMode){
  * @return `false` when failed (if the SSL preprocessor is not enabled)
  */
 bool TCP::setSSLCTXPointer(SSL_CTX *sslCtx){
-#ifdef __STCP_SSL__
   pthread_mutex_lock(&(this->mtx));
   pthread_mutex_lock(&(this->wmtx));
   this->sslCtx = sslCtx;
   pthread_mutex_unlock(&(this->mtx));
   pthread_mutex_unlock(&(this->wmtx));
   return true;
-#else
-  return false;
-#endif
 }
 
 /**
@@ -638,17 +635,14 @@ bool TCP::setSSLCTXPointer(SSL_CTX *sslCtx){
  * @return `false` when failed (if the SSL preprocessor is not enabled)
  */
 bool TCP::setSSLPointer(SSL *sslConn){
-#ifdef __STCP_SSL__
   pthread_mutex_lock(&(this->mtx));
   pthread_mutex_lock(&(this->wmtx));
   this->sslConn = sslConn;
   pthread_mutex_unlock(&(this->mtx));
   pthread_mutex_unlock(&(this->wmtx));
   return true;
-#else
-  return false;
-#endif
 }
+#endif
 
 /**
  * @brief Gets the address of TCP/IP communication interface.
@@ -1389,3 +1383,124 @@ int TCP::receiveStopBytes(const char *stopBytes){
 int TCP::receiveStopBytes(const std::string stopBytes){
   return this->receiveStopBytes((const unsigned char *) stopBytes.c_str(), stopBytes.length());
 }
+
+/**
+ * @brief Retrieves the amount of successfully received data.
+ *
+ * This function retrieves the information about the size of the data that has been successfully received.
+ *
+ * @return The size of the data in bytes.
+ */
+size_t TCP::getDataSize(){
+  return this->data.size();
+}
+
+/**
+ * @brief Retrieves the received data buffer.
+ *
+ * This function retrieves all the data that has been successfully received by the `receive` method.
+ *
+ * @param[out] buffer A variable to hold the data that has been successfully received.
+ * @param[in] maxBufferSz The maximum size of the data that can be accommodated in the buffer.
+ * @return The size of the data received.
+ */
+size_t TCP::getBuffer(unsigned char *buffer, size_t maxBufferSz){
+  pthread_mutex_lock(&(this->mtx));
+  size_t result = (this->data.size() < maxBufferSz ? this->data.size() : maxBufferSz);
+  memcpy(buffer, this->data.data(), result);
+  pthread_mutex_unlock(&(this->mtx));
+  return result;
+}
+
+/**
+ * @brief Overloaded method for `getBuffer` with `std::vector<unsigned char>` as the output parameter.
+ *
+ * Retrieves all the data that has been successfully received by the `receive` method.
+ *
+ * This overload allows you to use a `std::vector<unsigned char>` as the buffer to hold the received data.
+ *
+ * @param[out] buffer A `std::vector<unsigned char>` to hold the received data that has been successfully received.
+ * @return The size of the data received.
+ */
+size_t TCP::getBuffer(std::vector <unsigned char> &buffer){
+  pthread_mutex_lock(&(this->mtx));
+  buffer.clear();
+  buffer.assign(this->data.begin(), this->data.end());
+  pthread_mutex_unlock(&(this->mtx));
+  return buffer.size();
+}
+
+/**
+ * @brief Retrieves the received data buffer as a vector.
+ *
+ * This method returns all the data that has been successfully received by the `receive` method as a `std::vector<unsigned char>`.
+ *
+ * @return A `std::vector<unsigned char>` containing the data that has been successfully recieved.
+ */
+std::vector <unsigned char> TCP::getBufferAsVector(){
+  pthread_mutex_lock(&(this->mtx));
+  std::vector <unsigned char> tmp;
+  tmp.assign(this->data.begin(), this->data.end());
+  pthread_mutex_unlock(&(this->mtx));
+  return tmp;
+}
+
+/**
+ * @brief Retrieves the number of bytes in the remaining buffer.
+ *
+ * This method provides the size of the data that is still present in the remaining buffer.
+ *
+ * @return The size of the remaining data in bytes.
+ */
+size_t TCP::getRemainingDataSize(){
+  return this->remainingData.size();
+}
+
+/**
+ * @brief Retrieves the remaining recieved data outside of the data buffer.
+ *
+ * This method extracts all remaining data that has been successfully received but is outside the main data buffer.
+ *
+ * @param[out] buffer Variable to hold the remaining recieved data.
+ * @param[in] maxBufferSz Maximum size of data that can be held by the buffer variable.
+ * @return The size of the data.
+ */
+size_t TCP::getRemainingBuffer(unsigned char *buffer, size_t maxBufferSz){
+  pthread_mutex_lock(&(this->mtx));
+  size_t result = (this->remainingData.size() < maxBufferSz ? this->remainingData.size() : maxBufferSz);
+  memcpy(buffer, this->remainingData.data(), result);
+  pthread_mutex_unlock(&(this->mtx));
+  return result;
+}
+
+/**
+ * @brief Overloading method for __getRemainingBuffer__ with output parameter as vector.
+ *
+ * Retrieves all remaining data that has been successfully received but is outside the main data buffer.
+ *
+ * @param[out] buffer Variable to hold the remaining data, provided as a vector.
+ * @return The size of the remaining data.
+ */
+size_t TCP::getRemainingBuffer(std::vector <unsigned char> &buffer){
+  pthread_mutex_lock(&(this->mtx));
+  buffer.clear();
+  buffer.assign(this->remainingData.begin(), this->remainingData.end());
+  pthread_mutex_unlock(&(this->mtx));
+  return this->remainingData.size();
+}
+
+/**
+ * @brief Retrieves remaining data that has been successfully received but is outside the main data buffer, returning it as a vector.
+ *
+ * This method retrieves all remaining data that has been successfully received but is not included in the main data buffer, and returns it as a vector.
+ *
+ * @return std::vector<unsigned char> containing the remaining data that has been successfully received.
+ */
+std::vector <unsigned char> TCP::getRemainingBufferAsVector(){
+  pthread_mutex_lock(&(this->mtx));
+  std::vector <unsigned char> tmp;
+  tmp.assign(this->remainingData.begin(), this->remainingData.end());
+  pthread_mutex_unlock(&(this->mtx));
+  return tmp;
+}
+
