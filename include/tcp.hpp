@@ -392,6 +392,7 @@ class TCP {
      */
     bool setSSLVerifyMode(bool sslVerifyMode);
 
+#ifdef __STCP_SSL__
     /**
      * @brief Sets the SSL CTX pointer.
      *
@@ -413,6 +414,7 @@ class TCP {
      * @return `false` when failed (if the SSL preprocessor is not enabled)
      */
     bool setSSLPointer(SSL *sslConn);
+#endif
 
     /**
      * @brief Gets the address of TCP/IP communication interface.
@@ -827,7 +829,7 @@ class TCP {
      * @return `1` if the port is not open.
      * @return `2` if the data write operation fails.
      */
-    int sendData(const unsigned char *data, size_t sz);
+    int sendData(const unsigned char *buffer, size_t sz);
 
     /**
      * @brief Method overloading of `sendData` with input as `const std::vector`.
@@ -839,7 +841,7 @@ class TCP {
      * @return `1` if the port is not open.
      * @return `2` if the data write operation fails.
      */
-    int sendData(const std::vector <unsigned char> data);
+    int sendData(const std::vector <unsigned char> buffer);
 
     /**
      * @brief Method overloading of `sendData` with input as `const char*`.
@@ -851,7 +853,7 @@ class TCP {
      * @return `1` if the port is not open.
      * @return `2` if the data write operation fails.
      */
-    int sendData(const char *data);
+    int sendData(const char *buffer);
 
     /**
      * @brief Method overloading of `sendData` with input as `const std::string`.
@@ -863,7 +865,16 @@ class TCP {
      * @return `1` if the port is not open.
      * @return `2` if the data write operation fails.
      */
-    int sendData(const std::string data);
+    int sendData(const std::string buffer);
+
+    /**
+     * @brief Closes the TCP/IP connection between client and server.
+     *
+     * This function is used to close the currently TCP/IP connection between client and server,
+     * ensuring that the port is no longer in use and that any associated system resources
+     * are released.
+     */
+    void closeConnection();
 
     /**
      * @brief Closes the TCP/IP communication port.
@@ -872,7 +883,7 @@ class TCP {
      * ensuring that the port is no longer in use and that any associated system resources
      * are released.
      */
-    int closeSocket();
+    void closeSocket();
 };
 
 #endif

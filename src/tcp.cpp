@@ -280,6 +280,16 @@ TCP::TCP(const std::string address, int port){
 }
 
 /**
+ * @brief Destructor.
+ *
+ * This destructor is responsible for releasing any memory that has been allocated during the object's lifetime.
+ * It ensures that all allocated resources are properly freed, preventing memory leaks.
+ */
+TCP::~TCP(){
+  this->closeSocket();
+}
+
+/**
  * @brief Check is IP Address valid or not.
  *
  * This method is responsible for validating whether the IP Address is valid or not.
@@ -1504,3 +1514,142 @@ std::vector <unsigned char> TCP::getRemainingBufferAsVector(){
   return tmp;
 }
 
+/**
+ * @brief Performs the operation of sending TCP/IP data.
+ *
+ * This method sends the specified data to the TCP/IP port.
+ *
+ * @param[in] buffer Data to be written.
+ * @param[in] sz Size of the data to be written.
+ * @return `0` if the operation is successful.
+ * @return `1` if the port is not open.
+ * @return `2` if the data write operation fails.
+ */
+int TCP::sendData(const unsigned char *buffer, size_t sz){
+  pthread_mutex_lock(&(this->wmtx));
+  size_t total = 0;
+  if (this->connFd <= 0){
+    pthread_mutex_unlock(&(this->wmtx));
+    return 1;
+  }
+  ssize_t bytes = 0;
+  while (total < sz){
+    bytes = write(this->connFd, (void *) (buffer + total), sz - total);
+    if (bytes > 0){
+      total += bytes;
+    }
+    else {
+      pthread_mutex_unlock(&(this->wmtx));
+      return 2;
+    }
+  }
+  pthread_mutex_unlock(&(this->wmtx));
+  return 0;
+}
+
+/**
+ * @brief Method overloading of `sendData` with input as `const std::vector`.
+ *
+ * This method sends the specified data to the TCP/IP port. This overload allows the data to be passed as a `const std::vector`.
+ *
+ * @param[in] buffer Data to be written.
+ * @return `0` if the operation is successful.
+ * @return `1` if the port is not open.
+ * @return `2` if the data write operation fails.
+ */
+int TCP::sendData(const std::vector <unsigned char> buffer){
+  return this->sendData(buffer.data(), buffer.size());
+}
+
+/**
+ * @brief Method overloading of `sendData` with input as `const char*`.
+ *
+ * This method sends the specified data to the TCP/IP port. This overload allows the data to be passed as a `const char*`.
+ *
+ * @param[in] buffer Data to be written.
+ * @return `0` if the operation is successful.
+ * @return `1` if the port is not open.
+ * @return `2` if the data write operation fails.
+ */
+int TCP::sendData(const char *buffer){
+  return this->sendData((const unsigned char *) buffer, strlen(buffer));
+}
+
+/**
+ * @brief Method overloading of `sendData` with input as `const std::string`.
+ *
+ * This method sends the specified data to the TCP/IP port. This overload allows the data to be passed as a `const std::string`.
+ *
+ * @param[in] buffer Data to be written.
+ * @return `0` if the operation is successful.
+ * @return `1` if the port is not open.
+ * @return `2` if the data write operation fails.
+ */
+int TCP::sendData(const std::string buffer){
+  return this->sendData((const unsigned char *) buffer.c_str(), buffer.length());
+}
+
+/**
+ * @brief Closes the TCP/IP connection between client and server.
+ *
+ * This function is used to close the currently TCP/IP connection between client and server,
+ * ensuring that the port is no longer in use and that any associated system resources
+ * are released.
+ */
+void TCP::closeConnection(){
+  pthread_mutex_lock(&(this->mtx));
+  pthread_mutex_lock(&(this->wmtx));
+  if (this->sockFd == this->connFd){
+    this->sockFd = -1;
+  }
+#ifdef __STCP_SSL__
+  if (this->sslConn != nullptr && this->useSSL){
+    if (this->sockFd > 0){
+      if (!SSL_get_shutdown(this->sslConn)){
+        SSL_shutdown(this->sslConn);
+      }
+    }
+    else {
+      if (this->sslConnRoutineOkStatus != -1){
+        SSL_shutdown(this->sslConn);
+      }
+    }
+    SSL_free(this->sslConn);
+    this->sslConn = nullptr;
+  }
+  this->sslConnRoutineOkStatus = 0;
+#endif
+  if (this->connFd > 0){
+    if (!close(this->connFd)){
+      this->connFd = -1;
+    }
+  }
+  pthread_mutex_unlock(&(this->mtx));
+  pthread_mutex_unlock(&(this->wmtx));
+}
+
+/**
+ * @brief Closes the TCP/IP communication port.
+ *
+ * This function is used to close the currently TCP/IP communication port,
+ * ensuring that the port is no longer in use and that any associated system resources
+ * are released.
+ */
+void TCP::closeSocket(){
+  this->closeConnection();
+  pthread_mutex_lock(&(this->mtx));
+  pthread_mutex_lock(&(this->wmtx));
+#ifdef __STCP_SSL__
+  if (this->sslCtx != nullptr && this->useSSL){
+    SSL_CTX_free(this->sslCtx);
+    this->sslCtx = nullptr;
+  }
+#endif
+  if (this->sockFd > 0){
+    if (!close(this->sockFd)){
+      this->sockFd = -1;
+    }
+  }
+  pthread_mutex_unlock(&(this->mtx));
+  pthread_mutex_unlock(&(this->wmtx));
+}
