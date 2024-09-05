@@ -41,6 +41,9 @@ TCP::TCP(){
 #endif
   this->data.clear();
   this->remainingData.clear();
+  this->client = nullptr;
+  this->lastActivity.tv_sec = 0;
+  this->lastActivity.tv_usec = 0;
 }
 
 /**
@@ -70,6 +73,9 @@ TCP::TCP(const unsigned char *address){
 #endif
   this->data.clear();
   this->remainingData.clear();
+  this->client = nullptr;
+  this->lastActivity.tv_sec = 0;
+  this->lastActivity.tv_usec = 0;
 }
 
 /**
@@ -100,6 +106,9 @@ TCP::TCP(const unsigned char *address, int port){
 #endif
   this->data.clear();
   this->remainingData.clear();
+  this->client = nullptr;
+  this->lastActivity.tv_sec = 0;
+  this->lastActivity.tv_usec = 0;
 }
 
 /**
@@ -129,6 +138,9 @@ TCP::TCP(const std::vector <unsigned char> address){
 #endif
   this->data.clear();
   this->remainingData.clear();
+  this->client = nullptr;
+  this->lastActivity.tv_sec = 0;
+  this->lastActivity.tv_usec = 0;
 }
 
 /**
@@ -159,6 +171,9 @@ TCP::TCP(const std::vector <unsigned char> address, int port){
 #endif
   this->data.clear();
   this->remainingData.clear();
+  this->client = nullptr;
+  this->lastActivity.tv_sec = 0;
+  this->lastActivity.tv_usec = 0;
 }
 
 /**
@@ -188,6 +203,9 @@ TCP::TCP(const char *address){
 #endif
   this->data.clear();
   this->remainingData.clear();
+  this->client = nullptr;
+  this->lastActivity.tv_sec = 0;
+  this->lastActivity.tv_usec = 0;
 }
 
 /**
@@ -218,6 +236,9 @@ TCP::TCP(const char *address, int port){
 #endif
   this->data.clear();
   this->remainingData.clear();
+  this->client = nullptr;
+  this->lastActivity.tv_sec = 0;
+  this->lastActivity.tv_usec = 0;
 }
 
 /**
@@ -247,6 +268,9 @@ TCP::TCP(const std::string address){
 #endif
   this->data.clear();
   this->remainingData.clear();
+  this->client = nullptr;
+  this->lastActivity.tv_sec = 0;
+  this->lastActivity.tv_usec = 0;
 }
 
 /**
@@ -277,6 +301,9 @@ TCP::TCP(const std::string address, int port){
 #endif
   this->data.clear();
   this->remainingData.clear();
+  this->client = nullptr;
+  this->lastActivity.tv_sec = 0;
+  this->lastActivity.tv_usec = 0;
 }
 
 /**
@@ -287,6 +314,7 @@ TCP::TCP(const std::string address, int port){
  */
 TCP::~TCP(){
   this->closeSocket();
+  delete this->client;
 }
 
 /**
@@ -815,6 +843,67 @@ int TCP::serverInit(){
   pthread_mutex_unlock(&(this->mtx));
   pthread_mutex_unlock(&(this->wmtx));
   return 0;
+}
+
+/**
+ * @brief Check available event on server side after server has been initialized.
+ *
+ * This function attempts to check available event on server side after server has been initialized.
+ *
+ * @param[in] timeoutMs maximum waiting time to check event.
+ * @return `EVENT_NONE` when nothing happens
+ * @return `EVENT_CONNECT_REQUEST` when there is a connection request from the client side (when receiving this event, the server side needs to call the `serverAccept` method)
+ * @return `EVENT_BYTES_AVAILABLE` When there is data sent from the client side (to obtain this data, the server needs to call the reception method)
+ */
+TCP::SERVER_EVENT_t TCP::serverEventCheck(unsigned short timeoutMs){
+  pthread_mutex_lock(&(this->mtx));
+  pthread_mutex_lock(&(this->wmtx));
+  fd_set readfds;
+  int max = 0;
+  int ret = 0;
+  struct timeval tv;
+  max = this->sockFd;
+  FD_ZERO(&readfds);
+  FD_SET(this->sockFd, &readfds);
+  TCP *cli = this->client;
+  while(cli != NULL){
+    if(cli->connFd > 0){
+      FD_SET(cli->connFd, &readfds);
+      max = max < cli->connFd ? cli->connFd : max;
+    }
+    cli = cli->client;
+  }
+  if (max > 0){
+    tv.tv_sec = timeoutMs / 1000;
+    tv.tv_usec = (timeoutMs % 1000) * 1000;
+    ret = select(max + 1 , &readfds , NULL , NULL , &tv);
+    if(ret >= 0){
+      if (FD_ISSET(this->sockFd, &readfds)){
+        this->connFd = -1;
+        pthread_mutex_unlock(&(this->mtx));
+        pthread_mutex_unlock(&(this->wmtx));
+        return EVENT_CONNECT_REQUEST;
+      }
+      else {
+        cli = this->client;
+        while(cli != NULL){
+          if(cli->connFd > 0){
+            if (FD_ISSET(cli->connFd, &readfds)){
+              gettimeofday(&(cli->lastActivity), NULL);
+              this->connFd = cli->connFd;
+              pthread_mutex_unlock(&(this->mtx));
+              pthread_mutex_unlock(&(this->wmtx));
+              return EVENT_BYTES_AVAILABLE;
+            }
+          }
+          cli = cli->client;
+        }
+      }
+    }
+  }
+  pthread_mutex_unlock(&(this->mtx));
+  pthread_mutex_unlock(&(this->wmtx));
+  return EVENT_NONE;
 }
 
 /**

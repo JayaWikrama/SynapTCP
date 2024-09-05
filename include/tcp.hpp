@@ -80,6 +80,7 @@ class TCP {
     unsigned short keepAliveMs;           /*!< maximum wait time for receiving the next byte of data after the initial byte has been received */
     socklen_t len;                        /*!< type definition for length and size values used by socket related parameters, return values and structure members */
     struct timeval tvTimeout;             /*!< store timeout connection parameters */
+    struct timeval lastActivity;          /*!< last activity record */
     struct sockaddr_in addr;              /*!< structures for handling internet addresses */
     #ifdef __STCP_SSL__
         bool useSSL;                      /*!< variable to activate SSL Mode Protection */
@@ -92,6 +93,7 @@ class TCP {
     pthread_mutex_t wmtx;                 /*!< locking mechanism for write method */
     std::vector <unsigned char> data;           /*!< variable that store received data */
     std::vector <unsigned char> remainingData;  /*!< variable that store remaining data */
+    TCP *client;                                /*!< object that store client list (for server side only)*/
 
     /**
      * @brief Connect to TCP/IP Server with/without timeout.
@@ -104,6 +106,12 @@ class TCP {
     bool cliConnect();
 
   public:
+    typedef enum _SERVER_EVENT_t {        /*!< Available event on server side after server has been initialized. To check current available event, you can call `serverEventCheck` method */
+      EVENT_NONE = 0,                     /*!< when nothing happens */
+      EVENT_CONNECT_REQUEST = 1,          /*!< when there is a connection request from the client side (when receiving this event, the server side needs to call the `serverAccept` method) */
+      EVENT_BYTES_AVAILABLE = 2           /*!< When there is data sent from the client side (to obtain this data, the server needs to call the reception method) */
+    } SERVER_EVENT_t;
+
     /**
      * @brief Default constructor.
      *
@@ -497,6 +505,18 @@ class TCP {
      * @return `10` if failed to load cacert (available if SSL layer mode is activated)
      */
     int serverInit();
+
+    /**
+     * @brief Check available event on server side after server has been initialized.
+     *
+     * This function attempts to check available event on server side after server has been initialized.
+     *
+     * @param[in] timeoutMs maximum waiting time to check event.
+     * @return `EVENT_NONE` when nothing happens
+     * @return `EVENT_CONNECT_REQUEST` when there is a connection request from the client side (when receiving this event, the server side needs to call the `serverAccept` method)
+     * @return `EVENT_BYTES_AVAILABLE` When there is data sent from the client side (to obtain this data, the server needs to call the reception method)
+     */
+    TCP::SERVER_EVENT_t serverEventCheck(unsigned short timeoutMs);
 
     /**
      * @brief Accept the available client when TCP/IP Server listen the connection.
