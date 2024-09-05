@@ -560,6 +560,15 @@ class TCP {
     bool duplicate(TCP &obj);
 
     /**
+     * @brief Checks for available input bytes.
+     *
+     * This function checks whether there are any bytes available in the socket buffer.
+     *
+     * @return `true` if there are bytes available in the socket buffer.
+     * @return `false` if there are no bytes available in the socket buffer.
+     */
+    bool isInputBytesAvailable();
+    /**
      * @brief Performs a TCP/IP data receive operation.
      *
      * This function receives data from the TCP/IP port without separating the successfully received data into the desired size and remaining data. The receive TCP/IP data can be accessed using the `TCP::getBuffer` method.

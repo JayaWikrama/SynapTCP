@@ -1097,6 +1097,25 @@ bool TCP::duplicate(TCP &obj){
 }
 
 /**
+ * @brief Checks for available input bytes.
+ *
+ * This function checks whether there are any bytes available in the socket buffer.
+ *
+ * @return `true` if there are bytes available in the socket buffer.
+ * @return `false` if there are no bytes available in the socket buffer.
+ */
+bool TCP::isInputBytesAvailable(){
+  pthread_mutex_lock(&(this->mtx));
+  long inputBytes = 0;
+  if (ioctl(this->connFd, FIONREAD, &inputBytes) != 0){
+    pthread_mutex_unlock(&(this->mtx));
+    return false;
+  }
+  pthread_mutex_unlock(&(this->mtx));
+  return (inputBytes > 0 ? true : false);
+}
+
+/**
  * @brief Performs a TCP/IP data receive operation.
  *
  * This function receives data from the TCP/IP port without separating the successfully received data into the desired size and remaining data. The receive TCP/IP data can be accessed using the `TCP::getBuffer` method.
