@@ -1141,6 +1141,29 @@ int TCP::receiveData(size_t sz, bool dontSplitRemainingData){
     this->remainingData.clear();
   }
   do {
+    if (this->data.size() > 0) {
+      if (this->keepAliveMs == 0) break;
+      pthread_mutex_unlock(&(this->mtx));
+      static struct timeval tvStart;
+      static struct timeval tvEnd;
+      static long diffTime = 0;
+      gettimeofday(&tvStart, NULL);
+      do {
+        if (this->isInputBytesAvailable() == true){
+          break;
+        }
+        else {
+          usleep(1000);
+        }
+        gettimeofday(&tvEnd, NULL);
+        diffTime = static_cast<long>((tvEnd.tv_sec - tvStart.tv_sec) * 1000) + static_cast<long>((tvEnd.tv_usec - tvStart.tv_usec) / 1000);
+      } while (diffTime < static_cast<long>(this->keepAliveMs));
+      if (this->isInputBytesAvailable() == false){
+        pthread_mutex_lock(&(this->mtx));
+        break;
+      }
+      pthread_mutex_lock(&(this->mtx));
+    }
     bytes = read(this->connFd, (void *) tmp, sizeof(tmp));
     if (bytes > 0){
       for (idx = 0; idx < bytes; idx++){
@@ -1525,7 +1548,8 @@ size_t TCP::getDataSize(){
 size_t TCP::getBuffer(unsigned char *buffer, size_t maxBufferSz){
   pthread_mutex_lock(&(this->mtx));
   size_t result = (this->data.size() < maxBufferSz ? this->data.size() : maxBufferSz);
-  memcpy(buffer, this->data.data(), result);
+  memset(buffer, 0x00, maxBufferSz);
+  if (result > 0) memcpy(buffer, this->data.data(), result);
   pthread_mutex_unlock(&(this->mtx));
   return result;
 }
