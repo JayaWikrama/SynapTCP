@@ -846,6 +846,87 @@ int TCP::serverInit(){
 }
 
 /**
+ * @brief Add new client that has been accepted/connected by server to the client list.
+ *
+ * This method is called automatically when the `serverAccept` method is called sucessfully.
+ * @return `true` on success
+ * @return `false` if failed
+ */
+bool TCP::newClientAccepted(){
+  char cliAddr[16];
+  memset(cliAddr, 0x00, sizeof(cliAddr));
+  inet_ntop(AF_INET, &(this->addr.sin_addr), cliAddr, INET_ADDRSTRLEN);
+  TCP *cli = new TCP;
+  if (cli == nullptr) return false;
+  pthread_mutex_unlock(&(this->mtx));
+  pthread_mutex_unlock(&(this->wmtx));
+  if (this->duplicate(*cli) == false){
+    pthread_mutex_lock(&(this->mtx));
+    pthread_mutex_lock(&(this->wmtx));
+    delete cli;
+    return false;
+  }
+  pthread_mutex_lock(&(this->mtx));
+  pthread_mutex_lock(&(this->wmtx));
+  if (cli->setAddress(cliAddr) == false){
+    delete cli;
+    return false;
+  }
+  if (cli->setPort(ntohs(this->addr.sin_port)) == false){
+    delete cli;
+    return false;
+  }
+  cli->sockFd = this->connFd;
+  cli->connFd = this->connFd;
+#ifdef __STCP_SSL__
+  cli->sslConn = nullptr;
+  cli->sslCtx = nullptr;
+#endif
+  gettimeofday(&(cli->lastActivity), NULL);
+  if (this->client == nullptr){
+    this->client = cli;
+    return true;
+  }
+  TCP *tmp = this->client;
+  while (tmp->client != nullptr){
+    tmp = tmp->client;
+  }
+  tmp->client = cli;
+  return true;
+}
+
+/**
+ * @brief Remove existing client that has been disconnected by server from the client list.
+ *
+ * This method is called automatically when the `serverEventCheck` method is called sucessfully and disconnected event available.
+ * @return `true` on success
+ * @return `false` if failed
+ */
+bool TCP::removeClientFromList(){
+  TCP *cli = this->client;
+  TCP *next = cli->client;
+  if (cli->connFd == this->connFd){
+    cli->client = nullptr;
+    delete cli;
+    this->client = next;
+    this->connFd = -1;
+    return true;
+  }
+  while (cli->client != nullptr){
+    next = cli->client->client;
+    if (cli->client->connFd == this->connFd){
+      cli->client->client = nullptr;
+      delete cli;
+      cli->client = next;
+      this->connFd = -1;
+      return true;
+    }
+    cli = cli->client;
+  }
+  return false;
+}
+
+/**
  * @brief Check available event on server side after server has been initialized.
  *
  * This function attempts to check available event on server side after server has been initialized.

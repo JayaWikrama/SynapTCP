@@ -105,6 +105,24 @@ class TCP {
      */
     bool cliConnect();
 
+    /**
+     * @brief Add new client that has been accepted/connected by server to the client list.
+     *
+     * This method is called automatically when the `serverAccept` method is called sucessfully.
+     * @return `true` on success
+     * @return `false` if failed
+     */
+    bool newClientAccepted();
+
+    /**
+     * @brief Remove existing client that has been disconnected by server from the client list.
+     *
+     * This method is called automatically when the `serverEventCheck` method is called sucessfully and disconnected event available.
+     * @return `true` on success
+     * @return `false` if failed
+     */
+    bool removeClientFromList();
+
   public:
     typedef enum _SERVER_EVENT_t {        /*!< Available event on server side after server has been initialized. To check current available event, you can call `serverEventCheck` method */
       EVENT_NONE = 0,                     /*!< when nothing happens */
