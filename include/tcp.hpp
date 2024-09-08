@@ -127,7 +127,8 @@ class TCP {
     typedef enum _SERVER_EVENT_t {        /*!< Available event on server side after server has been initialized. To check current available event, you can call `serverEventCheck` method */
       EVENT_NONE = 0,                     /*!< when nothing happens */
       EVENT_CONNECT_REQUEST = 1,          /*!< when there is a connection request from the client side (when receiving this event, the server side needs to call the `serverAccept` method) */
-      EVENT_BYTES_AVAILABLE = 2           /*!< When there is data sent from the client side (to obtain this data, the server needs to call the reception method) */
+      EVENT_BYTES_AVAILABLE = 2,          /*!< when there is data sent from the client side (to obtain this data, the server needs to call the reception method) */
+      EVENT_CLIENT_DISCONNECTED = 3       /*!< when a client disconnects from the server */
     } SERVER_EVENT_t;
 
     /**
@@ -532,7 +533,8 @@ class TCP {
      * @param[in] timeoutMs maximum waiting time to check event.
      * @return `EVENT_NONE` when nothing happens
      * @return `EVENT_CONNECT_REQUEST` when there is a connection request from the client side (when receiving this event, the server side needs to call the `serverAccept` method)
-     * @return `EVENT_BYTES_AVAILABLE` When there is data sent from the client side (to obtain this data, the server needs to call the reception method)
+     * @return `EVENT_BYTES_AVAILABLE` when there is data sent from the client side (to obtain this data, the server needs to call the reception method)
+     * @return `EVENT_CLIENT_DISCONNECTED` when a client disconnects from the server
      */
     TCP::SERVER_EVENT_t serverEventCheck(unsigned short timeoutMs);
 

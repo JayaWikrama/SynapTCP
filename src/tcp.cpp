@@ -935,6 +935,7 @@ bool TCP::removeClientFromList(){
  * @return `EVENT_NONE` when nothing happens
  * @return `EVENT_CONNECT_REQUEST` when there is a connection request from the client side (when receiving this event, the server side needs to call the `serverAccept` method)
  * @return `EVENT_BYTES_AVAILABLE` When there is data sent from the client side (to obtain this data, the server needs to call the reception method)
+ * @return `EVENT_CLIENT_DISCONNECTED` when a client disconnects from the server
  */
 TCP::SERVER_EVENT_t TCP::serverEventCheck(unsigned short timeoutMs){
   pthread_mutex_lock(&(this->mtx));
@@ -968,18 +969,44 @@ TCP::SERVER_EVENT_t TCP::serverEventCheck(unsigned short timeoutMs){
       else {
         cli = this->client;
         while(cli != NULL){
-          if(cli->connFd > 0){
-            if (FD_ISSET(cli->connFd, &readfds)){
-              gettimeofday(&(cli->lastActivity), NULL);
-              this->connFd = cli->connFd;
+          if (FD_ISSET(cli->connFd, &readfds)){
+            gettimeofday(&(cli->lastActivity), NULL);
+            this->connFd = cli->connFd;
+            pthread_mutex_unlock(&(this->mtx));
+            pthread_mutex_unlock(&(this->wmtx));
+            if (this->isInputBytesAvailable() == false){
+              pthread_mutex_lock(&(this->mtx));
+              pthread_mutex_lock(&(this->wmtx));
+              this->removeClientFromList();
+              this->connFd = -1;
               pthread_mutex_unlock(&(this->mtx));
               pthread_mutex_unlock(&(this->wmtx));
-              return EVENT_BYTES_AVAILABLE;
+              return EVENT_CLIENT_DISCONNECTED;
             }
+            return EVENT_BYTES_AVAILABLE;
           }
           cli = cli->client;
         }
       }
+    }
+  }
+  if (this->client != nullptr){
+    TCP *prev = this;
+    long diffTime = 0;
+    cli = this->client;
+    gettimeofday(&tv, NULL);
+    while (cli != nullptr){
+      diffTime = ((tv.tv_sec - cli->lastActivity.tv_sec) * 1000) + ((tv.tv_usec - cli->lastActivity.tv_usec) / 1000);
+      if (diffTime > this->tvTimeout.tv_sec * 1000 + this->tvTimeout.tv_usec / 1000){
+        prev->client = cli->client;
+        cli->client = nullptr;
+        delete cli;
+        pthread_mutex_unlock(&(this->mtx));
+        pthread_mutex_unlock(&(this->wmtx));
+        return EVENT_CLIENT_DISCONNECTED;
+      }
+      prev = cli;
+      cli = cli->client;
     }
   }
   pthread_mutex_unlock(&(this->mtx));
@@ -1011,6 +1038,7 @@ bool TCP::serverAccept(){
     tv.tv_usec = this->tvTimeout.tv_usec;
     setsockopt(this->connFd, SOL_SOCKET, SO_RCVTIMEO, (const unsigned char *) &tv, sizeof(tv));
   }
+  this->newClientAccepted();
   pthread_mutex_unlock(&(this->mtx));
   pthread_mutex_unlock(&(this->wmtx));
   return true;
