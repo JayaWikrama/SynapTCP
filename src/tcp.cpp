@@ -1098,6 +1098,7 @@ bool TCP::cliConnect(){
       usleep(10000); 
     }
   }
+  this->connFd = this->sockFd;
   return true;
 }
 
@@ -1129,7 +1130,7 @@ int TCP::clientInit(){
   memset(&(this->addr), 0x00, sizeof(this->addr));
   this->addr.sin_family = AF_INET;
   this->addr.sin_port = (in_port_t) htons(this->port);
-  if(this->isValidIPAddress(this->address) != 0){
+  if(this->isValidIPAddress(this->address) == false){
     struct hostent *host = NULL;
     host = gethostbyname((const char *) this->address.data());
     if (host != NULL){
