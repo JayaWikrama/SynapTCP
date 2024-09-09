@@ -498,7 +498,7 @@ bool TCP::setAddress(const char *address){
  * @return `false` when the port is invalid
  */
 bool TCP::setPort(int port){
-  if (port < 0 && port > 65535) return false;
+  if (port <= 0 || port > 65535) return false;
   pthread_mutex_lock(&(this->mtx));
   pthread_mutex_lock(&(this->wmtx));
   this->port = port;
