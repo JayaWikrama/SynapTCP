@@ -327,11 +327,7 @@ TCP::~TCP(){
  * @return `false` when the IP Address is invalid
  */
 bool TCP::isValidIPAddress(const unsigned char *address){
-  if (address[0] == 255 &&
-      address[1] == 255 &&
-      address[2] == 255 &&
-      address[3] == 255
-  ){
+  if (address[3] == 255){
     return false;
   }
   return true;
@@ -380,7 +376,10 @@ bool TCP::isValidIPAddress(const char *address){
     else if (*address >= 0x30 && *address <= 0x39){
       value *= 10;
       value += static_cast<unsigned short>(*address - 0x30);
-      if (value >= 255){
+      if (value > 255){
+        return false;
+      }
+      else if (cnt == 3 && value == 255){
         return false;
       }
       isPrevDot = false;
