@@ -47,7 +47,9 @@ find_package(GTest REQUIRED)
 
 # Specify the source files
 set(SOURCE_FILES
-    src/tcp.cpp
+    src/socket.cpp
+    src/tcp-client.cpp
+    src/tcp-server.cpp
 )
 
 # Create a library from common code
