@@ -52,7 +52,7 @@ TCPClient::TCPClient(){
  * - Initializes the mutex for thread safety.
  * @param[in] address The address is in the form of an IP address with a size of 4 bytes.
  */
-TCPClient::TCPClient(const unsigned char *address) : Socket(address){
+TCPClient::TCPClient(const unsigned char *address) : SynapSock(address){
   this->status = static_cast<unsigned char>(TCPClient::CLIENT_UNINITIALIZED);
 }
 
@@ -67,7 +67,7 @@ TCPClient::TCPClient(const unsigned char *address) : Socket(address){
  * @param[in] address The address is in the form of an IP address with a size of 4 bytes.
  * @param[in] port The port of TCPClient/IP interface.
  */
-TCPClient::TCPClient(const unsigned char *address, int port) : Socket(address, port){
+TCPClient::TCPClient(const unsigned char *address, int port) : SynapSock(address, port){
   this->status = static_cast<unsigned char>(TCPClient::CLIENT_UNINITIALIZED);
 }
 
@@ -82,7 +82,7 @@ TCPClient::TCPClient(const unsigned char *address, int port) : Socket(address, p
  * - Initializes the mutex for thread safety.
  * @param[in] address The address is in the form of an IP address with a size of 4 bytes.
  */
-TCPClient::TCPClient(const std::vector <unsigned char> address) : Socket(address){
+TCPClient::TCPClient(const std::vector <unsigned char> address) : SynapSock(address){
   this->status = static_cast<unsigned char>(TCPClient::CLIENT_UNINITIALIZED);
 }
 
@@ -97,7 +97,7 @@ TCPClient::TCPClient(const std::vector <unsigned char> address) : Socket(address
  * @param[in] address The address is in the form of an IP address with a size of 4 bytes.
  * @param[in] port The port of TCPClient/IP interface.
  */
-TCPClient::TCPClient(const std::vector <unsigned char> address, int port) : Socket(address, port){
+TCPClient::TCPClient(const std::vector <unsigned char> address, int port) : SynapSock(address, port){
   this->status = static_cast<unsigned char>(TCPClient::CLIENT_UNINITIALIZED);
 }
 
@@ -112,7 +112,7 @@ TCPClient::TCPClient(const std::vector <unsigned char> address, int port) : Sock
  * - Initializes the mutex for thread safety.
  * @param[in] address The address in the form of an IP address or domain (in this case, a string in the form of a char pointer).
  */
-TCPClient::TCPClient(const char *address) : Socket(address){
+TCPClient::TCPClient(const char *address) : SynapSock(address){
   this->status = static_cast<unsigned char>(TCPClient::CLIENT_UNINITIALIZED);
 }
 
@@ -127,7 +127,7 @@ TCPClient::TCPClient(const char *address) : Socket(address){
  * @param[in] address The address in the form of an IP address or domain (in this case, a string in the form of a char pointer).
  * @param[in] port The port of TCPClient/IP interface.
  */
-TCPClient::TCPClient(const char *address, int port) : Socket(address, port){
+TCPClient::TCPClient(const char *address, int port) : SynapSock(address, port){
   this->status = static_cast<unsigned char>(TCPClient::CLIENT_UNINITIALIZED);
 }
 
@@ -142,7 +142,7 @@ TCPClient::TCPClient(const char *address, int port) : Socket(address, port){
  * - Initializes the mutex for thread safety.
  * @param[in] address The address in the form of an IP address or domain (string).
  */
-TCPClient::TCPClient(const std::string address) : Socket(address){
+TCPClient::TCPClient(const std::string address) : SynapSock(address){
   this->status = static_cast<unsigned char>(TCPClient::CLIENT_UNINITIALIZED);
 }
 
@@ -157,7 +157,7 @@ TCPClient::TCPClient(const std::string address) : Socket(address){
  * @param[in] address The address in the form of an IP address or domain (string).
  * @param[in] port The port of TCPClient/IP interface.
  */
-TCPClient::TCPClient(const std::string address, int port) : Socket(address, port){
+TCPClient::TCPClient(const std::string address, int port) : SynapSock(address, port){
   this->status = static_cast<unsigned char>(TCPClient::CLIENT_UNINITIALIZED);
 }
 

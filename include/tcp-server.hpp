@@ -57,25 +57,25 @@
 #ifndef __TCP_SERVER_BASIC_HPP__
 #define __TCP_SERVER_BASIC_HPP__
 
-#include "socket.hpp"
+#include "synapsock.hpp"
 
 class ClientCollection {
   public:
-    Socket *client;
+    SynapSock *client;
     struct timeval lastActivity;
     pthread_t th;
     pthread_cond_t cond;
     pthread_mutex_t mtx;
     ClientCollection *next;
 
-    ClientCollection(const Socket *client);
+    ClientCollection(const SynapSock *client);
     ~ClientCollection();
 };
 
-class TCPServer : public Socket {
+class TCPServer : public SynapSock {
   private:
     unsigned short maxClient;             /*!< maximum number of client (for server) */
-    Socket *client;                       /*!< Client index that is being processed */
+    SynapSock *client;                       /*!< Client index that is being processed */
     ClientCollection *clientList;         /*!< A collection of TCPServer/IP clients that have been accepted by the server */
 
   protected:
@@ -96,7 +96,7 @@ class TCPServer : public Socket {
      * @return `true` on success
      * @return `false` if failed
      */
-    bool removeClient(const Socket *socket);
+    bool removeClient(const SynapSock *socket);
 
   public:
     typedef enum _SERVER_EVENT_t {        /*!< Available event on server side after server has been initialized. To check current available event, you can call `eventCheck` method */
@@ -300,6 +300,6 @@ class TCPServer : public Socket {
      * @return pointer of active client object.
      * @return `nullptr` if no active client available.
      */
-    Socket *getActiveClient();
+    SynapSock *getActiveClient();
 };
 #endif

@@ -1,5 +1,5 @@
 /*
- * $Id: tcp-client.hpp,v 1.0.1 2024/09/11 12:51:47 Jaya Wikrama Exp $
+ * $Id: synapsock.hpp,v 1.0.0 2024/09/12 20:51:47 Jaya Wikrama Exp $
  *
  * Copyright (c) 2024 Jaya Wikrama
  * jayawikrama89@gmail.com
@@ -23,209 +23,224 @@
 
 /**
  * @file
- * @brief Enhanced TCP/IP (client) Communication Functions library.
+ * @brief Advance Socket Protocol (with framed data) library.
  *
- * This file contains a collection of functions and commands designed to facilitate and extend
- * basic TCP/IP communication in C++ for the client side. These functions are intended to simplify
- * the process of setting up, sending, receiving, and managing data over TCP/IP connections.
- * The enhancements provided in this header file go beyond the standard library functions, offering
- * more flexibility and control for developers working with TCP/IP interfaces.
- *
- * The key functionalities include:
- * - Initialization and configuration of TCP/IP Client.
- * - Sending and receiving data over TCP/IP connections.
- * - Error handling and diagnostics for TCP/IP communication on client side.
- * - Utility functions for managing TCP/IP buffers and flow control.
- *
- * The functions in this file are designed to be easy to integrate into various projects,
- * providing a robust foundation for TCP/IP communication in embedded systems, networking,
- * or any application that requires TCP/IP data transmission.
- *
- * @note This file is a part of a larger project focusing on enhancing TCP/IP communication
- *       capabilities in C++ applications.
+ * This library provides a robust implementation of a socket communication protocol
+ * that includes data framing. It is designed for reliable data exchange over socket
+ * connections, supporting error detection and packet-based communication.
  *
  * @version 1.0.0
- * @date 2024-08-31
+ * @date 2024-09-12
  * @author Jaya Wikrama
- *
- * @version 1.0.1
- * @date 2024-09-11
- * @author Jaya Wikrama
- * @note Splitting tcp.h into socket.hpp tcp-client.hpp tcp-server.hpp
  */
 
-#ifndef __TCP_CLIENT_BASIC_HPP__
-#define __TCP_CLIENT_BASIC_HPP__
+#ifndef __SYNAPSOCK_HPP__
+#define __SYNAPSOCK_HPP__
 
-#include "synapsock.hpp"
+#include "socket.hpp"
+#include "data-frame.hpp"
 
-class TCPClient : public SynapSock {
+class SynapSock : public Socket {
   private:
-    unsigned char status;             /*!< Socket status */
-
-  protected:
-    typedef enum _CLIENT_STATUS_t {   /*!< List of Socket (client) status */
-      CLIENT_UNINITIALIZED = 0,       /*!< Status for TCP/IP clients that have not been initialized or when the socket has been closed and is ready to be reinitialized.*/
-      CLIENT_INITIALIZED,             /*!< Status for TCP/IP client that has been initialized and ready to connect to the server.*/
-      CLIENT_CONNECTED,               /*!< Status for TCP/IP client that has been initialized and ready to receive or send data to the server.*/
-      CLIENT_DISCONNECTED             /*!< Status for the TCP/IP client when communication to the server has been lost.*/
-    } CLIENT_STATUS_t;
-
-    /**
-     * @brief Connect to TCP/IP Server with/without timeout.
-     *
-     * This method is called automatically when the `clientInit` method is called.
-     *
-     * @return `true` if success
-     * @return `false` if fail or timeout
-     */
-    bool connectToServer();
-
+    bool isFormatValid;
+    DataFrame *frameFormat;
   public:
-
     /**
      * @brief Default constructor.
      *
      * This constructor initializes private and protected data members and parameters to their default values, including:
-     * - `maxClient = 10` : Default value of maximum number of client (for server) is 10.
      * - `port = 3000` : Port is set to 3000 as its default value.
      * - `address = 127.0.0.1` : Default address is set to localhost.
      * - `timeout = 1500` : Timeout is set to 1500 ms (1.5 second).
      * - `keepAliveMs = 0` : Keep-alive interval is set to 0 milliseconds.
      * - Initializes the mutex for thread safety.
      */
-    TCPClient();
+    SynapSock();
 
     /**
      * @brief Custom constructor.
      *
      * This constructor initializes some private and protected data members and parameters to their default values, including:
-     * - `maxClient = 10` : Default value of maximum number of client (for server) is 10.
      * - `port = 3000` : Port is set to 3000 as its default value.
      * - `timeout = 1500` : Timeout is set to 1500 ms (1.5 second).
      * - `keepAliveMs = 0` : Keep-alive interval is set to 0 milliseconds.
      * - Initializes the mutex for thread safety.
      * @param[in] address The address is in the form of an IP address with a size of 4 bytes.
      */
-    TCPClient(const unsigned char *address);
+    SynapSock(const unsigned char *address);
 
     /**
      * @brief Overloading of Custom constructor.
      *
      * This constructor initializes some private and protected data members and parameters to their default values, including:
-     * - `maxClient = 10` : Default value of maximum number of client (for server) is 10.
      * - `timeout = 1500` : Timeout is set to 1500 ms (1.5 second).
      * - `keepAliveMs = 0` : Keep-alive interval is set to 0 milliseconds.
      * - Initializes the mutex for thread safety.
      * @param[in] address The address is in the form of an IP address with a size of 4 bytes.
-     * @param[in] port The port of TCP/IP interface.
+     * @param[in] port The port of Socket interface.
      */
-    TCPClient(const unsigned char *address, int port);
+    SynapSock(const unsigned char *address, int port);
 
     /**
      * @brief Overloading of Custom constructor.
      *
      * This constructor initializes some private and protected data members and parameters to their default values, including:
-     * - `maxClient = 10` : Default value of maximum number of client (for server) is 10.
      * - `port = 3000` : Port is set to 3000 as its default value.
      * - `timeout = 1500` : Timeout is set to 1500 ms (1.5 second).
      * - `keepAliveMs = 0` : Keep-alive interval is set to 0 milliseconds.
      * - Initializes the mutex for thread safety.
      * @param[in] address The address is in the form of an IP address with a size of 4 bytes.
      */
-    TCPClient(const std::vector <unsigned char> address);
+    SynapSock(const std::vector <unsigned char> address);
 
     /**
      * @brief Overloading of Custom constructor.
      *
      * This constructor initializes some private and protected data members and parameters to their default values, including:
-     * - `maxClient = 10` : Default value of maximum number of client (for server) is 10.
      * - `timeout = 1500` : Timeout is set to 1500 ms (1.5 second).
      * - `keepAliveMs = 0` : Keep-alive interval is set to 0 milliseconds.
      * - Initializes the mutex for thread safety.
      * @param[in] address The address is in the form of an IP address with a size of 4 bytes.
-     * @param[in] port The port of TCP/IP interface.
+     * @param[in] port The port of Socket interface.
      */
-    TCPClient(const std::vector <unsigned char> address, int port);
+    SynapSock(const std::vector <unsigned char> address, int port);
 
     /**
      * @brief Overloading of Custom constructor.
      *
      * This constructor initializes some private and protected data members and parameters to their default values, including:
-     * - `maxClient = 10` : Default value of maximum number of client (for server) is 10.
      * - `port = 3000` : Port is set to 3000 as its default value.
      * - `timeout = 1500` : Timeout is set to 1500 ms (1.5 second).
      * - `keepAliveMs = 0` : Keep-alive interval is set to 0 milliseconds.
      * - Initializes the mutex for thread safety.
      * @param[in] address The address in the form of an IP address or domain (in this case, a string in the form of a char pointer).
      */
-    TCPClient(const char *address);
+    SynapSock(const char *address);
 
     /**
      * @brief Overloading of Custom constructor.
      *
      * This constructor initializes some private and protected data members and parameters to their default values, including:
-     * - `maxClient = 10` : Default value of maximum number of client (for server) is 10.
      * - `timeout = 1500` : Timeout is set to 1500 ms (1.5 second).
      * - `keepAliveMs = 0` : Keep-alive interval is set to 0 milliseconds.
      * - Initializes the mutex for thread safety.
      * @param[in] address The address in the form of an IP address or domain (in this case, a string in the form of a char pointer).
-     * @param[in] port The port of TCP/IP interface.
+     * @param[in] port The port of Socket interface.
      */
-    TCPClient(const char *address, int port);
+    SynapSock(const char *address, int port);
 
     /**
      * @brief Overloading of Custom constructor.
      *
      * This constructor initializes some private and protected data members and parameters to their default values, including:
-     * - `maxClient = 10` : Default value of maximum number of client (for server) is 10.
      * - `port = 3000` : Port is set to 3000 as its default value.
      * - `timeout = 1500` : Timeout is set to 1500 ms (1.5 second).
      * - `keepAliveMs = 0` : Keep-alive interval is set to 0 milliseconds.
      * - Initializes the mutex for thread safety.
      * @param[in] address The address in the form of an IP address or domain (string).
      */
-    TCPClient(const std::string address);
+    SynapSock(const std::string address);
 
     /**
      * @brief Overloading of Custom constructor.
      *
      * This constructor initializes some private and protected data members and parameters to their default values, including:
-     * - `maxClient = 10` : Default value of maximum number of client (for server) is 10.
      * - `timeout = 1500` : Timeout is set to 1500 ms (1.5 second).
      * - `keepAliveMs = 0` : Keep-alive interval is set to 0 milliseconds.
      * - Initializes the mutex for thread safety.
      * @param[in] address The address in the form of an IP address or domain (string).
-     * @param[in] port The port of TCP/IP interface.
+     * @param[in] port The port of Socket interface.
      */
-    TCPClient(const std::string address, int port);
+    SynapSock(const std::string address, int port);
 
     /**
      * @brief Destructor.
      *
-     * This destructor is responsible for releasing any memory that has been allocated during the object's lifetime.
-     * It ensures that all allocated resources are properly freed, preventing memory leaks.
+     * Releases any allocated memory.
      */
-    ~TCPClient();
+    ~SynapSock();
 
     /**
-     * @brief Initialize TCP/IP Client connection.
+     * @brief Retrieves the memory address of the frame format.
      *
-     * This function attempts to open the specified TCP/IP (socket) port for communication and connect it to the remote server.
-     * It initialize the port according to the current settings and prepares it for data transfer.
+     * This function returns the address of the `frameFormat` data member.
      *
-     * @return `0` Initialize process success.
-     * @return `1` if the port fails to open.
-     * @return `2` if failed to allocate connection parameters memory
-     * @return `3` if failed to get hostname ip address
-     * @return `4` if failed to create SSL_CTX (available if SSL layer mode is activated)
-     * @return `5` if failed to use certificate (available if SSL layer mode is activated)
-     * @return `6` if failed to use private key (available if SSL layer mode is activated)
-     * @return `7` if failed to check priate key (available if SSL layer mode is activated)
-     * @return `8` if failed to connect server
-     * @return `9` if failed to connect server with SSL handshake (available if SSL layer mode is activated)
+     * @return The memory address of the `frameFormat`.
      */
-    int init();
+    DataFrame *getFormat();
+
+    /**
+     * @brief Stops receiving framed socket data.
+     *
+     * This function sets up variables that act as indicators for the validity of the received socket data,
+     * allowing it to stop receiving framed socket data from user space. It achieves this by using a post-execution
+     * function configured within the `DataFrame` class.
+     */
+    void trigInvDataIndicator();
+
+    /**
+     * @brief Performs socket data receive operations with a custom frame format.
+     *
+     * This function executes socket data receiving operations using a specific frame format.
+     * The receive socket data can be retrieved using the `__Serial::getBuffer__` method.
+     *
+     * @return 0 on success.
+     * @return 1 if the port is not open.
+     * @return 2 if a timeout occurs.
+     * @return 3 if the frame format is not set up.
+     * @return 4 if the frame data format is invalid.
+     */
+    int receiveFramedData();
+
+    /**
+     * @brief Performs socket data send operations with a custom frame format.
+     *
+     * This function executes socket data send operations using a specific frame format.
+     *
+     * @return 0 on success.
+     * @return 1 if the port is not open.
+     * @return 2 if a timeout occurs.
+     * @return 3 if there is no data to send.
+     */
+    int sendFramedData();
+
+    /**
+     * @brief Retrieves a buffer of data receive and stored in the Framed Data within a specified range.
+     *
+     * This method extracts data from the buffer that has been successfully receive and stored in the Framed Data
+     * within the specified range. This version is suitable for data with unique Frame Formats in each frame
+     * (no duplicate Frame Types).
+     *
+     * @param begin Reference to the starting point for data extraction.
+     * @param end Reference to the ending point for data extraction.
+     * @return A vector containing the data.
+     */
+    std::vector <unsigned char> getSpecificBufferAsVector(DataFrame::FRAME_TYPE_t begin, DataFrame::FRAME_TYPE_t end);
+
+    /**
+     * @brief Overloaded method of __getSpecificBufferAsVector__.
+     *
+     * This method performs the same data extraction operation as the other overload but is designed to handle
+     * cases where duplicate Frame Formats exist within the Framed Data. It retrieves data from the buffer
+     * that has been successfully receive and stored within the specified range.
+     *
+     * @param begin Pointer to the starting point for data extraction.
+     * @param end Pointer to the ending point for data extraction.
+     * @return A vector containing the data.
+     */
+    std::vector <unsigned char> getSpecificBufferAsVector(const DataFrame *begin, const DataFrame *end);
+
+    SynapSock& operator=(const DataFrame &obj);
+
+    SynapSock& operator+=(const DataFrame &obj);
+
+    SynapSock& operator+(const DataFrame &obj);
+
+    DataFrame* operator[](int idx);
+
+    DataFrame* operator[](DataFrame::FRAME_TYPE_t type);
+
+    DataFrame* operator[](std::pair <DataFrame::FRAME_TYPE_t, int> params);
 };
 
 #endif

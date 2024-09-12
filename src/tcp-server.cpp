@@ -26,13 +26,13 @@
 #include <string.h>
 #include "tcp-server.hpp"
 
-ClientCollection::ClientCollection(const Socket *client){
+ClientCollection::ClientCollection(const SynapSock *client){
   gettimeofday(&lastActivity, nullptr);
   this->th = 0;
   pthread_cond_init(&(this->cond), nullptr);
   pthread_mutex_init(&(this->mtx), nullptr);
   this->next = nullptr;
-  this->client = (Socket *) client;
+  this->client = (SynapSock *) client;
 }
 
 ClientCollection::~ClientCollection(){
@@ -69,7 +69,7 @@ TCPServer::TCPServer(){
  * - Initializes the mutex for thread safety.
  * @param[in] address The address is in the form of an IP address with a size of 4 bytes.
  */
-TCPServer::TCPServer(const unsigned char *address) : Socket::Socket(address){
+TCPServer::TCPServer(const unsigned char *address) : SynapSock(address){
   this->maxClient = 10;
   this->client = nullptr;
   this->clientList = nullptr;
@@ -86,7 +86,7 @@ TCPServer::TCPServer(const unsigned char *address) : Socket::Socket(address){
  * @param[in] address The address is in the form of an IP address with a size of 4 bytes.
  * @param[in] port The port of TCPServer/IP interface.
  */
-TCPServer::TCPServer(const unsigned char *address, int port) : Socket::Socket(address, port){
+TCPServer::TCPServer(const unsigned char *address, int port) : SynapSock(address, port){
   this->maxClient = 10;
   this->client = nullptr;
   this->clientList = nullptr;
@@ -103,7 +103,7 @@ TCPServer::TCPServer(const unsigned char *address, int port) : Socket::Socket(ad
  * - Initializes the mutex for thread safety.
  * @param[in] address The address is in the form of an IP address with a size of 4 bytes.
  */
-TCPServer::TCPServer(const std::vector <unsigned char> address) : Socket::Socket(address){
+TCPServer::TCPServer(const std::vector <unsigned char> address) : SynapSock(address){
   this->maxClient = 10;
   this->client = nullptr;
   this->clientList = nullptr;
@@ -120,7 +120,7 @@ TCPServer::TCPServer(const std::vector <unsigned char> address) : Socket::Socket
  * @param[in] address The address is in the form of an IP address with a size of 4 bytes.
  * @param[in] port The port of TCPServer/IP interface.
  */
-TCPServer::TCPServer(const std::vector <unsigned char> address, int port) : Socket::Socket(address, port){
+TCPServer::TCPServer(const std::vector <unsigned char> address, int port) : SynapSock(address, port){
   this->maxClient = 10;
   this->client = nullptr;
   this->clientList = nullptr;
@@ -137,7 +137,7 @@ TCPServer::TCPServer(const std::vector <unsigned char> address, int port) : Sock
  * - Initializes the mutex for thread safety.
  * @param[in] address The address in the form of an IP address or domain (in this case, a string in the form of a char pointer).
  */
-TCPServer::TCPServer(const char *address) : Socket::Socket(address){
+TCPServer::TCPServer(const char *address) : SynapSock(address){
   this->maxClient = 10;
   this->client = nullptr;
   this->clientList = nullptr;
@@ -154,7 +154,7 @@ TCPServer::TCPServer(const char *address) : Socket::Socket(address){
  * @param[in] address The address in the form of an IP address or domain (in this case, a string in the form of a char pointer).
  * @param[in] port The port of TCPServer/IP interface.
  */
-TCPServer::TCPServer(const char *address, int port) : Socket::Socket(address, port){
+TCPServer::TCPServer(const char *address, int port) : SynapSock(address, port){
   this->maxClient = 10;
   this->client = nullptr;
   this->clientList = nullptr;
@@ -171,7 +171,7 @@ TCPServer::TCPServer(const char *address, int port) : Socket::Socket(address, po
  * - Initializes the mutex for thread safety.
  * @param[in] address The address in the form of an IP address or domain (string).
  */
-TCPServer::TCPServer(const std::string address) : Socket::Socket(address){
+TCPServer::TCPServer(const std::string address) : SynapSock(address){
   this->maxClient = 10;
   this->client = nullptr;
   this->clientList = nullptr;
@@ -188,7 +188,7 @@ TCPServer::TCPServer(const std::string address) : Socket::Socket(address){
  * @param[in] address The address in the form of an IP address or domain (string).
  * @param[in] port The port of TCPServer/IP interface.
  */
-TCPServer::TCPServer(const std::string address, int port) : Socket::Socket(address, port){
+TCPServer::TCPServer(const std::string address, int port) : SynapSock(address, port){
   this->maxClient = 10;
   this->client = nullptr;
   this->clientList = nullptr;
@@ -304,7 +304,7 @@ bool TCPServer::addClient(int connFd){
   char cliAddr[16];
   memset(cliAddr, 0x00, sizeof(cliAddr));
   inet_ntop(AF_INET, &(this->addr.sin_addr), cliAddr, INET_ADDRSTRLEN);
-  Socket *client = new Socket;
+  SynapSock *client = new SynapSock;
   if (client == nullptr) return false;
   pthread_mutex_unlock(&(this->mtx));
   pthread_mutex_unlock(&(this->wmtx));
@@ -357,7 +357,7 @@ bool TCPServer::addClient(int connFd){
  * @return `true` on success
  * @return `false` if failed
  */
-bool TCPServer::removeClient(const Socket *socket){
+bool TCPServer::removeClient(const SynapSock *socket){
   if (this->clientList == nullptr || socket == nullptr){
     return true;
   }
@@ -528,6 +528,6 @@ bool TCPServer::acceptNewClient(){
  * @return pointer of active client object.
  * @return `nullptr` if no active client available.
  */
-Socket *TCPServer::getActiveClient(){
+SynapSock *TCPServer::getActiveClient(){
   return this->client;
 }

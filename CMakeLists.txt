@@ -48,6 +48,7 @@ find_package(GTest REQUIRED)
 # Specify the source files
 set(SOURCE_FILES
     src/socket.cpp
+    src/synapsock.cpp
     src/tcp-client.cpp
     src/tcp-server.cpp
 )
@@ -78,16 +79,26 @@ target_include_directories(${PROJECT_NAME}-lib PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
   $<INSTALL_INTERFACE:include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/DataFrame/include>
 )
 
 include_directories(${PROJECT_NAME}-test PUBLIC ${GTEST_INCLUDE_DIRS})
 
+# Ensure DataFrame is built before the executable
+add_dependencies(${PROJECT_NAME} DataFrame-lib)
+
 # Link the executable with the library
-target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}-lib)
+target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}-lib DataFrame-lib)
 target_link_libraries(${PROJECT_NAME} PUBLIC -lpthread)
 
+add_subdirectory(external/DataFrame EXCLUDE_FROM_ALL)
+set(USE_EXE_FUNC ON)
+set(USE_POST_EXE_FUNC ON)
+add_definitions(-D__USE_EXE_FUNC)
+add_definitions(-D__USE_POST_FUNC)
+
 # Link Unit Test executable with the library
-target_link_libraries(${PROJECT_NAME}-test PRIVATE ${PROJECT_NAME}-lib)
+target_link_libraries(${PROJECT_NAME}-test PRIVATE ${PROJECT_NAME}-lib DataFrame-lib)
 target_link_libraries(${PROJECT_NAME}-test PUBLIC ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} -lpthread)
 
 # Set compiler and linker flags

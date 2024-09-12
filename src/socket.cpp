@@ -1155,6 +1155,64 @@ int Socket::receiveStopBytes(const std::string stopBytes){
 }
 
 /**
+ * @brief Performs Socket data reception until the desired amount of data is received.
+ *
+ * This function performs the operation of receiving Socket data until the specified amount of data is fulfilled. The operation retries up to 3 times, starting from the first data received. The received Socket data can be accessed using the `Socket::getBuffer` method.
+ *
+ * @param[in] sz The size of the Socket data to be received.
+ * @return `0` if successful.
+ * @return `1` if the port is not open.
+ * @return `2` if a timeout occurs.
+ */
+int Socket::receiveNBytes(size_t sz){
+  size_t i = 0;
+  std::vector <unsigned char> tmp;
+  int ret = 0;
+  int tryTimes = 0;
+  bool isRcvFirstBytes = false;
+  do {
+    if (this->remainingData.size() > 0){
+      this->data.assign(this->remainingData.begin(), this->remainingData.end());
+      this->remainingData.clear();
+      ret = 0;
+    }
+    else {
+      ret = this->receiveData(sz, true);
+    }
+    if (!ret){
+      if (isRcvFirstBytes == false){
+        tryTimes = 3;
+        isRcvFirstBytes = true;
+      }
+      tmp.insert(tmp.end(), this->data.begin(), this->data.end());
+      if (this->remainingData.size() > 0){
+        tmp.insert(tmp.end(), this->remainingData.begin(), this->remainingData.end());
+        this->remainingData.clear();
+      }
+      if (tmp.size() >= sz) break;
+    }
+    else if (isRcvFirstBytes == true) {
+      tryTimes--;
+    }
+  } while(tryTimes > 0);
+  if (tmp.size() < sz){
+    this->data.assign(tmp.begin(), tmp.end());
+    return 2;
+  }
+  if (this->data.size() != tmp.size()){
+    this->data.clear();
+    this->data.assign(tmp.begin(), tmp.begin() + sz);
+    if (tmp.size() > sz) this->remainingData.assign(tmp.begin() + sz, tmp.end());
+    return 0;
+  }
+  if (this->data.size() > sz){
+    this->remainingData.assign(this->data.begin() + sz, this->data.end());
+    this->data.erase(this->data.begin() + sz, this->data.end());
+  }
+  return 0;
+}
+
+/**
  * @brief Retrieves the amount of successfully received data.
  *
  * This function retrieves the information about the size of the data that has been successfully received.
