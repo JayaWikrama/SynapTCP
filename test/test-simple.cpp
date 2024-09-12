@@ -4,7 +4,8 @@
 #include <iostream>
 #include <unistd.h>
 #include <pthread.h>
-#include "tcp.hpp"
+#include "tcp-client.hpp"
+#include "tcp-server.hpp"
 
 static bool isRun = true;
 
@@ -16,38 +17,44 @@ void *echoServer(void *param){
     unsigned char buffer[1024];
     size_t sz = 0;
     int ret = 0;
-    TCP::SERVER_EVENT_t event;
-    TCP *obj = (TCP *) param;
-    if (obj->serverInit() != 0){
+    TCPServer::SERVER_EVENT_t event;
+    TCPServer *obj = (TCPServer *) param;
+    Socket *activeConnection = nullptr;
+    if (obj->init() != 0){
         std::cerr << "Failed to initialize server" << std::endl;
     }
     pthread_mutex_lock(&mtx);
     pthread_cond_signal(&cond);
     pthread_mutex_unlock(&mtx);
     do {
-        event = obj->serverEventCheck(125);
-        if (event == TCP::EVENT_CONNECT_REQUEST){
+        event = obj->eventCheck(125);
+        if (event == TCPServer::EVENT_CONNECT_REQUEST){
             std::cout << "New connection request from client" << std::endl;
-            obj->serverAccept();
+            obj->acceptNewClient();
+            std::cout << "New client accepted" << std::endl;
         }
-        else if (event == TCP::EVENT_BYTES_AVAILABLE){
+        else if (event == TCPServer::EVENT_BYTES_AVAILABLE){
             std::cout << "New bytes available from client" << std::endl;
-            if (obj->receiveData() == 0){
-                std::cout << "Data Received" << std::endl;
-                obj->sendData(obj->getBufferAsVector());
+            activeConnection = obj->getActiveClient();
+            if (activeConnection != nullptr){
+                if (activeConnection->receiveData() == 0){
+                    std::cout << "Data Received form " << activeConnection->getAddress() << ":" << activeConnection->getPort() << std::endl;
+                    activeConnection->sendData(activeConnection->getBufferAsVector());
+                }
             }
         }
-        else if (event == TCP::EVENT_CLIENT_DISCONNECTED){
+        else if (event == TCPServer::EVENT_CLIENT_DISCONNECTED){
             std::cout << "A client disconnected from server" << std::endl;
         }
+        usleep(25000);
     } while (isRun);
     return nullptr;
 }
 
 class TCPSimpleTest:public::testing::Test {
 protected:
-    TCP server;
-    TCP client;
+    TCPServer server;
+    TCPClient client;
     pthread_t th;
     TCPSimpleTest() : server("127.0.0.1", 4431) {}
     void SetUp() override {
@@ -70,15 +77,13 @@ protected:
     }
 };
 
-/* Default constructor */
-
 TEST_F(TCPSimpleTest, DefaultConstructor_1) {
     unsigned char buffer[8];
     std::vector <unsigned char> tmp;
     struct timeval tv;
     ASSERT_EQ(client.getAddress(), std::string("127.0.0.1"));
     ASSERT_EQ(client.getPort(), 3000);
-    ASSERT_EQ(client.getMaximumClient(), 10);
+    ASSERT_EQ(server.getMaximumClient(), 10);
     memcpy(&tv, client.getTimeout(), sizeof(tv));
     ASSERT_EQ(tv.tv_sec, 1);
     ASSERT_EQ(tv.tv_usec, 500000);
@@ -99,10 +104,9 @@ TEST_F(TCPSimpleTest, CustomConstructor_1) {
     unsigned char buffer[8];
     std::vector <unsigned char> tmp;
     struct timeval tv;
-    TCP cli((const unsigned char *) "\x08\x08\x08\x08");
+    TCPClient cli((const unsigned char *) "\x08\x08\x08\x08");
     ASSERT_EQ(cli.getAddress(), std::string("8.8.8.8"));
     ASSERT_EQ(cli.getPort(), 3000);
-    ASSERT_EQ(cli.getMaximumClient(), 10);
     memcpy(&tv, cli.getTimeout(), sizeof(tv));
     ASSERT_EQ(tv.tv_sec, 1);
     ASSERT_EQ(tv.tv_usec, 500000);
@@ -123,10 +127,9 @@ TEST_F(TCPSimpleTest, CustomConstructor_2) {
     unsigned char buffer[8];
     std::vector <unsigned char> tmp;
     struct timeval tv;
-    TCP cli((const unsigned char *) "\x08\x08\x08\x08", 4431);
+    TCPClient cli((const unsigned char *) "\x08\x08\x08\x08", 4431);
     ASSERT_EQ(cli.getAddress(), std::string("8.8.8.8"));
     ASSERT_EQ(cli.getPort(), 4431);
-    ASSERT_EQ(cli.getMaximumClient(), 10);
     memcpy(&tv, cli.getTimeout(), sizeof(tv));
     ASSERT_EQ(tv.tv_sec, 1);
     ASSERT_EQ(tv.tv_usec, 500000);
@@ -151,10 +154,9 @@ TEST_F(TCPSimpleTest, CustomConstructor_3) {
     tmp.push_back(168);
     tmp.push_back(1);
     tmp.push_back(1);
-    TCP cli(tmp);
+    TCPClient cli(tmp);
     ASSERT_EQ(cli.getAddress(), std::string("192.168.1.1"));
     ASSERT_EQ(cli.getPort(), 3000);
-    ASSERT_EQ(cli.getMaximumClient(), 10);
     memcpy(&tv, cli.getTimeout(), sizeof(tv));
     ASSERT_EQ(tv.tv_sec, 1);
     ASSERT_EQ(tv.tv_usec, 500000);
@@ -179,10 +181,9 @@ TEST_F(TCPSimpleTest, CustomConstructor_4) {
     tmp.push_back(168);
     tmp.push_back(1);
     tmp.push_back(1);
-    TCP cli(tmp, 4431);
+    TCPClient cli(tmp, 4431);
     ASSERT_EQ(cli.getAddress(), std::string("192.168.1.1"));
     ASSERT_EQ(cli.getPort(), 4431);
-    ASSERT_EQ(cli.getMaximumClient(), 10);
     memcpy(&tv, cli.getTimeout(), sizeof(tv));
     ASSERT_EQ(tv.tv_sec, 1);
     ASSERT_EQ(tv.tv_usec, 500000);
@@ -203,10 +204,9 @@ TEST_F(TCPSimpleTest, CustomConstructor_5) {
     unsigned char buffer[8];
     std::vector <unsigned char> tmp;
     struct timeval tv;
-    TCP cli("1.1.1.1");
+    TCPClient cli("1.1.1.1");
     ASSERT_EQ(cli.getAddress(), std::string("1.1.1.1"));
     ASSERT_EQ(cli.getPort(), 3000);
-    ASSERT_EQ(cli.getMaximumClient(), 10);
     memcpy(&tv, cli.getTimeout(), sizeof(tv));
     ASSERT_EQ(tv.tv_sec, 1);
     ASSERT_EQ(tv.tv_usec, 500000);
@@ -227,10 +227,9 @@ TEST_F(TCPSimpleTest, CustomConstructor_6) {
     unsigned char buffer[8];
     std::vector <unsigned char> tmp;
     struct timeval tv;
-    TCP cli("1.1.1.1", 4431);
+    TCPClient cli("1.1.1.1", 4431);
     ASSERT_EQ(cli.getAddress(), std::string("1.1.1.1"));
     ASSERT_EQ(cli.getPort(), 4431);
-    ASSERT_EQ(cli.getMaximumClient(), 10);
     memcpy(&tv, cli.getTimeout(), sizeof(tv));
     ASSERT_EQ(tv.tv_sec, 1);
     ASSERT_EQ(tv.tv_usec, 500000);
@@ -251,10 +250,9 @@ TEST_F(TCPSimpleTest, CustomConstructor_7) {
     unsigned char buffer[8];
     std::vector <unsigned char> tmp;
     struct timeval tv;
-    TCP cli(std::string("0.0.0.0"));
+    TCPClient cli(std::string("0.0.0.0"));
     ASSERT_EQ(cli.getAddress(), std::string("0.0.0.0"));
     ASSERT_EQ(cli.getPort(), 3000);
-    ASSERT_EQ(cli.getMaximumClient(), 10);
     memcpy(&tv, cli.getTimeout(), sizeof(tv));
     ASSERT_EQ(tv.tv_sec, 1);
     ASSERT_EQ(tv.tv_usec, 500000);
@@ -275,10 +273,9 @@ TEST_F(TCPSimpleTest, CustomConstructor_8) {
     unsigned char buffer[8];
     std::vector <unsigned char> tmp;
     struct timeval tv;
-    TCP cli(std::string("0.0.0.0"), 4431);
+    TCPClient cli(std::string("0.0.0.0"), 4431);
     ASSERT_EQ(cli.getAddress(), std::string("0.0.0.0"));
     ASSERT_EQ(cli.getPort(), 4431);
-    ASSERT_EQ(cli.getMaximumClient(), 10);
     memcpy(&tv, cli.getTimeout(), sizeof(tv));
     ASSERT_EQ(tv.tv_sec, 1);
     ASSERT_EQ(tv.tv_usec, 500000);
@@ -375,20 +372,20 @@ TEST_F(TCPSimpleTest, setterAndGetterTest_2) {
 }
 
 TEST_F(TCPSimpleTest, setterAndGetterTest_3) {
-    ASSERT_EQ(client.setMaximumClient(0), false);
-    ASSERT_EQ(client.getMaximumClient(), 10);
-    ASSERT_EQ(client.setMaximumClient(1), true);
-    ASSERT_EQ(client.getMaximumClient(), 1);
-    ASSERT_EQ(client.setMaximumClient(256), true);
-    ASSERT_EQ(client.getMaximumClient(), 256);
-    ASSERT_EQ(client.setMaximumClient(0x1FFF), true);
-    ASSERT_EQ(client.getMaximumClient(), 0x1FFF);
-    ASSERT_EQ(client.setMaximumClient(0xFFFF), true);
-    ASSERT_EQ(client.getMaximumClient(), 0xFFFF);
-    ASSERT_EQ(client.setMaximumClient(0xFFFF + 1), false);
-    ASSERT_EQ(client.getMaximumClient(), 0xFFFF);
-    ASSERT_EQ(client.setMaximumClient(-1), false);
-    ASSERT_EQ(client.getMaximumClient(), 0xFFFF);
+    ASSERT_EQ(server.setMaximumClient(0), false);
+    ASSERT_EQ(server.getMaximumClient(), 10);
+    ASSERT_EQ(server.setMaximumClient(1), true);
+    ASSERT_EQ(server.getMaximumClient(), 1);
+    ASSERT_EQ(server.setMaximumClient(256), true);
+    ASSERT_EQ(server.getMaximumClient(), 256);
+    ASSERT_EQ(server.setMaximumClient(0x1FFF), true);
+    ASSERT_EQ(server.getMaximumClient(), 0x1FFF);
+    ASSERT_EQ(server.setMaximumClient(0xFFFF), true);
+    ASSERT_EQ(server.getMaximumClient(), 0xFFFF);
+    ASSERT_EQ(server.setMaximumClient(0xFFFF + 1), false);
+    ASSERT_EQ(server.getMaximumClient(), 0xFFFF);
+    ASSERT_EQ(server.setMaximumClient(-1), false);
+    ASSERT_EQ(server.getMaximumClient(), 0xFFFF);
 }
 
 TEST_F(TCPSimpleTest, setterAndGetterTest_4) {
@@ -470,7 +467,7 @@ TEST_F(TCPSimpleTest, communicationTest_1) {
     unsigned char buffer[16];
     std::vector <unsigned char> tmp;
     ASSERT_EQ(client.setPort(4431), true);
-    ASSERT_EQ(client.clientInit(), 0);
+    ASSERT_EQ(client.init(), 0);
     ASSERT_EQ(client.sendData("TCP::EchoTest"), 0);
     ASSERT_EQ(client.receiveData(), 0);
     client.closeSocket();
@@ -495,7 +492,7 @@ TEST_F(TCPSimpleTest, communicationTest_2) {
     unsigned char buffer[8];
     std::vector <unsigned char> tmp;
     ASSERT_EQ(client.setPort(4431), true);
-    ASSERT_EQ(client.clientInit(), 0);
+    ASSERT_EQ(client.init(), 0);
     ASSERT_EQ(client.sendData("TCP::EchoTest"), 0);
     ASSERT_EQ(client.receiveData(), 0);
     client.closeSocket();
@@ -520,7 +517,7 @@ TEST_F(TCPSimpleTest, communicationTest_3) {
     unsigned char buffer[16];
     std::vector <unsigned char> tmp;
     ASSERT_EQ(client.setPort(4431), true);
-    ASSERT_EQ(client.clientInit(), 0);
+    ASSERT_EQ(client.init(), 0);
     for (int i = 0; i < 5; i++){
         ASSERT_EQ(client.sendData("TCP::EchoTest"), 0);
         ASSERT_EQ(client.receiveData(), 0);
@@ -564,7 +561,7 @@ TEST_F(TCPSimpleTest, communicationTest_4) {
     std::string sdata = "TCP::EchoTestTCP::EchoTestTCP::EchoTestTCP::EchoTestTCP::EchoTest";
     std::vector <unsigned char> tmp;
     ASSERT_EQ(client.setPort(4431), true);
-    ASSERT_EQ(client.clientInit(), 0);
+    ASSERT_EQ(client.init(), 0);
     ASSERT_EQ(client.sendData(sdata), 0);
     for (int i = 0; i < 5; i++){
         ASSERT_EQ(client.receiveData(13), 0);
