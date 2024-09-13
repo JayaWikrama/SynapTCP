@@ -12,6 +12,13 @@ static bool isRun = true;
 static pthread_mutex_t mtx;
 static pthread_cond_t cond;
 
+void receptionCallbackFunction(SynapSock &connection, void *param){
+    if (connection.receiveData() == 0){
+        std::cout << "Data Received form " << connection.getAddress() << ":" << connection.getPort() << std::endl;
+        connection.sendData(connection.getBufferAsVector());
+    }
+}
+
 void *echoServer(void *param){
     if (isRun == false) return nullptr;
     unsigned char buffer[1024];
@@ -19,7 +26,6 @@ void *echoServer(void *param){
     int ret = 0;
     TCPServer::SERVER_EVENT_t event;
     TCPServer *obj = (TCPServer *) param;
-    Socket *activeConnection = nullptr;
     if (obj->init() != 0){
         std::cerr << "Failed to initialize server" << std::endl;
     }
@@ -29,24 +35,11 @@ void *echoServer(void *param){
     do {
         event = obj->eventCheck(125);
         if (event == TCPServer::EVENT_CONNECT_REQUEST){
-            std::cout << "New connection request from client" << std::endl;
-            obj->acceptNewClient();
             std::cout << "New client accepted" << std::endl;
-        }
-        else if (event == TCPServer::EVENT_BYTES_AVAILABLE){
-            std::cout << "New bytes available from client" << std::endl;
-            activeConnection = obj->getActiveClient();
-            if (activeConnection != nullptr){
-                if (activeConnection->receiveData() == 0){
-                    std::cout << "Data Received form " << activeConnection->getAddress() << ":" << activeConnection->getPort() << std::endl;
-                    activeConnection->sendData(activeConnection->getBufferAsVector());
-                }
-            }
         }
         else if (event == TCPServer::EVENT_CLIENT_DISCONNECTED){
             std::cout << "A client disconnected from server" << std::endl;
         }
-        usleep(25000);
     } while (isRun);
     return nullptr;
 }
@@ -61,6 +54,7 @@ protected:
         isRun = true;
         server.setTimeout(250);
         server.setKeepAliveMs(25);
+        server.setReceptionHandler(&receptionCallbackFunction, nullptr);
         pthread_mutex_init(&mtx, nullptr);
         pthread_cond_init(&cond, nullptr);
         std::cout << "Create Echo Server Thread" << std::endl;
