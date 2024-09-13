@@ -292,3 +292,18 @@ int TCPClient::init(){
   pthread_mutex_unlock(&(this->wmtx));
   return 0;
 }
+
+TCPClient& TCPClient::operator=(const DataFrame &obj){
+  SynapSock::operator=(obj);
+  return *this;
+}
+
+TCPClient& TCPClient::operator+=(const DataFrame &obj){
+  SynapSock::operator+=(obj);
+  return *this;
+}
+
+TCPClient& TCPClient::operator+(const DataFrame &obj){
+  SynapSock::operator+(obj);
+  return *this;
+}

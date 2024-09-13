@@ -301,5 +301,11 @@ class TCPServer : public SynapSock {
      * @return `nullptr` if no active client available.
      */
     SynapSock *getActiveClient();
+
+    TCPServer& operator=(const DataFrame &obj);
+
+    TCPServer& operator+=(const DataFrame &obj);
+
+    TCPServer& operator+(const DataFrame &obj);
 };
 #endif

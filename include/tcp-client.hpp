@@ -226,6 +226,12 @@ class TCPClient : public SynapSock {
      * @return `9` if failed to connect server with SSL handshake (available if SSL layer mode is activated)
      */
     int init();
+
+    TCPClient& operator=(const DataFrame &obj);
+
+    TCPClient& operator+=(const DataFrame &obj);
+
+    TCPClient& operator+(const DataFrame &obj);
 };
 
 #endif
