@@ -74,9 +74,13 @@ class ClientCollection {
 
 class TCPServer : public SynapSock {
   private:
-    unsigned short maxClient;             /*!< maximum number of client (for server) */
-    SynapSock *client;                       /*!< Client index that is being processed */
-    ClientCollection *clientList;         /*!< A collection of TCPServer/IP clients that have been accepted by the server */
+    unsigned short maxClient;               /*!< maximum number of client (for server) */
+    SynapSock *client;                      /*!< client pointer that is being processed */
+    ClientCollection *clientList;           /*!< a collection of TCPServer/IP clients that have been accepted by the server */
+    const void *conReqCallbackFunction;     /*!< callback function that is automatically called when there is a connection request event */
+    void *conReqCallbackParam;              /*!< parameters of the connection request event callback function */
+    const void *receptionCallbackFunction;  /*!< callback function that is automatically called when there is a reception event */
+    void *receptionCallbackParam;           /*!< parameters of the reception event callback function */
 
   protected:
     /**
@@ -301,6 +305,29 @@ class TCPServer : public SynapSock {
      * @return `nullptr` if no active client available.
      */
     SynapSock *getActiveClient();
+
+    /**
+     * @brief Provides access to users to manage connection requests.
+     *
+     * This method provide flexibility to users to manage existing connection requests.
+     * The callback function is automatically called when there is a connection request event.
+     * If the callback function is not set up, the connection request will be automatically
+     * approved (accepted) by the server.
+     *
+     * @param func callback function that has 2 parameters. `TCP Server &` is an object of the server itself. `void *` is a pointer that will connect directly to `void *param`.
+     * @param param callback function parameter.
+     */
+    void setConnectionRequestHandler(void (*func)(TCPServer &, void *), void *param);
+
+    /**
+     * @brief Set handler to receive data sent by remote client.
+     *
+     * This method must be called before socket communication begins (before calling the `eventCheck` method).
+     *
+     * @param func callback function that has 2 parameters. `SynapSock &` is an active connection. `void *` is a pointer that will connect directly to `void *param`
+     * @param param callback function parameter.
+     */
+    void setReceptionHandler(void (*func)(SynapSock &, void *), void *param);
 
     TCPServer& operator=(const DataFrame &obj);
 

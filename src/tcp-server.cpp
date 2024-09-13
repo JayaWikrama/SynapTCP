@@ -433,11 +433,25 @@ TCPServer::SERVER_EVENT_t TCPServer::eventCheck(unsigned short timeoutMs){
   }
   tv.tv_sec = timeoutMs / 1000;
   tv.tv_usec = (timeoutMs % 1000) * 1000;
+  pthread_mutex_unlock(&(this->mtx));
+  pthread_mutex_unlock(&(this->wmtx));
   ret = select(max + 1 , &readfds , NULL , NULL , &tv);
+  pthread_mutex_lock(&(this->mtx));
+  pthread_mutex_lock(&(this->wmtx));
   if(ret >= 0){
     if (FD_ISSET(this->sockFd, &readfds)){
-      pthread_mutex_unlock(&(this->mtx));
-      pthread_mutex_unlock(&(this->wmtx));
+      if (this->conReqCallbackFunction != nullptr){
+        void (*callback)(TCPServer &, void *) = (void (*)(TCPServer &, void *))this->conReqCallbackFunction;
+        void *param = this->conReqCallbackParam;
+        pthread_mutex_unlock(&(this->mtx));
+        pthread_mutex_unlock(&(this->wmtx));
+        callback(*this, param);
+      }
+      else {
+        pthread_mutex_unlock(&(this->mtx));
+        pthread_mutex_unlock(&(this->wmtx));
+        this->acceptNewClient();
+      }
       return EVENT_CONNECT_REQUEST;
     }
     else if (this->clientList != nullptr) {
@@ -460,6 +474,10 @@ clientEvent:
             pthread_mutex_unlock(&(this->mtx));
             pthread_mutex_unlock(&(this->wmtx));
             return EVENT_CLIENT_DISCONNECTED;
+          }
+          if (this->receptionCallbackFunction != nullptr){
+            void (*callback)(SynapSock &, void *) = (void (*)(SynapSock &, void *))this->receptionCallbackFunction;
+            callback(*(this->client), this->conReqCallbackParam);
           }
           return EVENT_BYTES_AVAILABLE;
         }
@@ -532,6 +550,43 @@ bool TCPServer::acceptNewClient(){
  */
 SynapSock *TCPServer::getActiveClient(){
   return this->client;
+}
+
+/**
+ * @brief Provides access to users to manage connection requests.
+ *
+ * This method provide flexibility to users to manage existing connection requests.
+ * The callback function is automatically called when there is a connection request event.
+ * If the callback function is not set up, the connection request will be automatically
+ * approved (accepted) by the server.
+ *
+ * @param func callback function that has 2 parameters. `TCP Server &` is an object of the server itself. `void *` is a pointer that will connect directly to `void *param`.
+ * @param param callback function parameter.
+ */
+void TCPServer::setConnectionRequestHandler(void (*func)(TCPServer &, void *), void *param){
+  pthread_mutex_lock(&(this->mtx));
+  pthread_mutex_lock(&(this->wmtx));
+  this->conReqCallbackFunction = (const void *) func;
+  this->conReqCallbackParam = param;
+  pthread_mutex_unlock(&(this->mtx));
+  pthread_mutex_unlock(&(this->wmtx));
+}
+
+/**
+ * @brief Set handler to receive data sent by remote client.
+ *
+ * This method must be called before socket communication begins (before calling the `eventCheck` method).
+ *
+ * @param func callback function that has 2 parameters. `SynapSock &` is an active connection. `void *` is a pointer that will connect directly to `void *param`.
+ * @param param callback function parameter.
+ */
+void TCPServer::setReceptionHandler(void (*func)(SynapSock &, void *), void *param){
+  pthread_mutex_lock(&(this->mtx));
+  pthread_mutex_lock(&(this->wmtx));
+  this->receptionCallbackFunction = (const void *) func;
+  this->receptionCallbackParam = param;
+  pthread_mutex_unlock(&(this->mtx));
+  pthread_mutex_unlock(&(this->wmtx));
 }
 
 TCPServer& TCPServer::operator=(const DataFrame &obj){
