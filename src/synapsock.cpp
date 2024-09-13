@@ -207,7 +207,10 @@ void SynapSock::trigInvDataIndicator(){
  * @return 4 if the frame data format is invalid.
  */
 int SynapSock::receiveFramedData(){
-    if (this->frameFormat == nullptr) return 3;
+    if (this->frameFormat == nullptr){
+        this->receiveData();
+        return 3;
+    }
     DataFrame *tmp = this->frameFormat;
     std::vector <unsigned char> vecUC;
     int ret = 0;
