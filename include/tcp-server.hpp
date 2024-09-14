@@ -328,11 +328,5 @@ class TCPServer : public SynapSock {
      * @param param callback function parameter.
      */
     void setReceptionHandler(void (*func)(SynapSock &, void *), void *param);
-
-    TCPServer& operator=(const DataFrame &obj);
-
-    TCPServer& operator+=(const DataFrame &obj);
-
-    TCPServer& operator+(const DataFrame &obj);
 };
 #endif

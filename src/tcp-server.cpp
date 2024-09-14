@@ -325,8 +325,6 @@ bool TCPServer::addClient(int connFd){
   pthread_mutex_lock(&(this->mtx));
   pthread_mutex_lock(&(this->wmtx));
   client->setSocketFd(connFd);
-  if (this->getFormat() != nullptr)
-    *(client) = *(this->getFormat());
 #ifdef __STCP_SSL__
   client->sslConn = this->sslConn;
   client->sslCtx = nullptr;
@@ -587,19 +585,4 @@ void TCPServer::setReceptionHandler(void (*func)(SynapSock &, void *), void *par
   this->receptionCallbackParam = param;
   pthread_mutex_unlock(&(this->mtx));
   pthread_mutex_unlock(&(this->wmtx));
-}
-
-TCPServer& TCPServer::operator=(const DataFrame &obj){
-  SynapSock::operator=(obj);
-  return *this;
-}
-
-TCPServer& TCPServer::operator+=(const DataFrame &obj){
-  SynapSock::operator+=(obj);
-  return *this;
-}
-
-TCPServer& TCPServer::operator+(const DataFrame &obj){
-  SynapSock::operator+(obj);
-  return *this;
 }
