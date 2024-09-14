@@ -170,6 +170,14 @@ class SynapSock : public Socket {
     DataFrame *getFormat();
 
     /**
+     * @brief Release and destroy frame format pointer.
+     *
+     * This function will release memory previously allocated for `frameFormat`.
+     *
+     */
+    void destroyFormat();
+
+    /**
      * @brief Stops receiving framed socket data.
      *
      * This function sets up variables that act as indicators for the validity of the received socket data,

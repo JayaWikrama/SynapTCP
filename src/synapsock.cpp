@@ -184,6 +184,19 @@ DataFrame *SynapSock::getFormat(){
 }
 
 /**
+ * @brief Release and destroy frame format pointer.
+ *
+ * This function will release memory previously allocated for `frameFormat`.
+ *
+ */
+void SynapSock::destroyFormat(){
+    if (this->frameFormat != nullptr){
+        delete this->frameFormat;
+        this->frameFormat = nullptr;
+    }
+}
+
+/**
  * @brief Stops receiving framed socket data.
  *
  * This function sets up variables that act as indicators for the validity of the received socket data,
