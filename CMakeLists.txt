@@ -69,7 +69,8 @@ set_target_properties(${PROJECT_NAME}-lib PROPERTIES
 )
 
 # Create the executable
-add_executable(${PROJECT_NAME} examples/main.cpp)
+add_executable(${PROJECT_NAME}-client examples/data-formating.cpp examples/client.cpp)
+add_executable(${PROJECT_NAME}-server examples/data-formating.cpp examples/server.cpp)
 
 # Create Unit Test executable
 add_executable(${PROJECT_NAME}-test test/test-simple.cpp)
@@ -85,11 +86,15 @@ target_include_directories(${PROJECT_NAME}-lib PUBLIC
 include_directories(${PROJECT_NAME}-test PUBLIC ${GTEST_INCLUDE_DIRS})
 
 # Ensure DataFrame is built before the executable
-add_dependencies(${PROJECT_NAME} DataFrame-lib)
+add_dependencies(${PROJECT_NAME}-client DataFrame-lib)
+add_dependencies(${PROJECT_NAME}-server DataFrame-lib)
+add_dependencies(${PROJECT_NAME}-test DataFrame-lib)
 
 # Link the executable with the library
-target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}-lib DataFrame-lib)
-target_link_libraries(${PROJECT_NAME} PUBLIC -lpthread)
+target_link_libraries(${PROJECT_NAME}-client PRIVATE ${PROJECT_NAME}-lib DataFrame-lib)
+target_link_libraries(${PROJECT_NAME}-client PUBLIC -lpthread)
+target_link_libraries(${PROJECT_NAME}-server PRIVATE ${PROJECT_NAME}-lib DataFrame-lib)
+target_link_libraries(${PROJECT_NAME}-server PUBLIC -lpthread)
 
 add_subdirectory(external/DataFrame EXCLUDE_FROM_ALL)
 set(USE_EXE_FUNC ON)
