@@ -82,6 +82,29 @@ class TCPServer : public SynapSock {
     const void *receptionCallbackFunction;  /*!< callback function that is automatically called when there is a reception event */
     void *receptionCallbackParam;           /*!< parameters of the reception event callback function */
 
+    /* Set some parent method as private method on TCPServer */
+    using SynapSock::getFormat;
+    using SynapSock::destroyFormat;
+    using SynapSock::trigInvDataIndicator;
+    using SynapSock::receiveFramedData;
+    using SynapSock::sendFramedData;
+    using SynapSock::getSpecificBufferAsVector;
+    using Socket::duplicate;
+    using Socket::isInputBytesAvailable;
+    using Socket::receiveData;
+    using Socket::receiveStartBytes;
+    using Socket::receiveUntillStopBytes;
+    using Socket::receiveStopBytes;
+    using Socket::receiveNBytes;
+    using Socket::getDataSize;
+    using Socket::getBuffer;
+    using Socket::getBufferAsVector;
+    using Socket::getRemainingDataSize;
+    using Socket::getRemainingBuffer;
+    using Socket::getRemainingBufferAsVector;
+    using Socket::sendData;
+    using Socket::closeConnection;
+
   protected:
     /**
      * @brief Add new client that has been accepted/connected by server to the client list.
