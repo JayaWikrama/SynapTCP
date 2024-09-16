@@ -74,6 +74,7 @@ class ClientCollection {
 
 class TCPServer : public SynapSock {
   private:
+    bool receptionHandlerAsThread;          /*!< mode to choose how the reception handler is run (as a thread or not) */
     unsigned short maxClient;               /*!< maximum number of client (for server) */
     SynapSock *client;                      /*!< client pointer that is being processed */
     ClientCollection *clientList;           /*!< a collection of TCPServer/IP clients that have been accepted by the server */
@@ -337,8 +338,8 @@ class TCPServer : public SynapSock {
      * If the callback function is not set up, the connection request will be automatically
      * approved (accepted) by the server.
      *
-     * @param func callback function that has 2 parameters. `TCP Server &` is an object of the server itself. `void *` is a pointer that will connect directly to `void *param`.
-     * @param param callback function parameter.
+     * @param[in] func callback function that has 2 parameters. `TCP Server &` is an object of the server itself. `void *` is a pointer that will connect directly to `void *param`.
+     * @param[in] param callback function parameter.
      */
     void setConnectionRequestHandler(void (*func)(TCPServer &, void *), void *param);
 
@@ -347,8 +348,19 @@ class TCPServer : public SynapSock {
      *
      * This method must be called before socket communication begins (before calling the `eventCheck` method).
      *
-     * @param func callback function that has 2 parameters. `SynapSock &` is an active connection. `void *` is a pointer that will connect directly to `void *param`
-     * @param param callback function parameter.
+     * @param[in] func callback function that has 2 parameters. `SynapSock &` is an active connection. `void *` is a pointer that will connect directly to `void *param`
+     * @param[in] param callback function parameter.
+     * @param[in] asThread if the given value is true, then the reception handler will run as a thread.
+     */
+    void setReceptionHandler(void (*func)(SynapSock &, void *), void *param, bool asThread);
+
+    /**
+     * @brief Method overloading setReceptionHandler. Set handler to receive data sent by remote client for non-thread operation.
+     *
+     * This method must be called before socket communication begins (before calling the `eventCheck` method).
+     *
+     * @param[in] func callback function that has 2 parameters. `SynapSock &` is an active connection. `void *` is a pointer that will connect directly to `void *param`
+     * @param[in] param callback function parameter.
      */
     void setReceptionHandler(void (*func)(SynapSock &, void *), void *param);
 

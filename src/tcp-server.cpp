@@ -558,8 +558,8 @@ SynapSock *TCPServer::getActiveClient(){
  * If the callback function is not set up, the connection request will be automatically
  * approved (accepted) by the server.
  *
- * @param func callback function that has 2 parameters. `TCP Server &` is an object of the server itself. `void *` is a pointer that will connect directly to `void *param`.
- * @param param callback function parameter.
+ * @param[in] func callback function that has 2 parameters. `TCP Server &` is an object of the server itself. `void *` is a pointer that will connect directly to `void *param`.
+ * @param[in] param callback function parameter.
  */
 void TCPServer::setConnectionRequestHandler(void (*func)(TCPServer &, void *), void *param){
   pthread_mutex_lock(&(this->mtx));
@@ -575,16 +575,30 @@ void TCPServer::setConnectionRequestHandler(void (*func)(TCPServer &, void *), v
  *
  * This method must be called before socket communication begins (before calling the `eventCheck` method).
  *
- * @param func callback function that has 2 parameters. `SynapSock &` is an active connection. `void *` is a pointer that will connect directly to `void *param`.
- * @param param callback function parameter.
+ * @param[in] func callback function that has 2 parameters. `SynapSock &` is an active connection. `void *` is a pointer that will connect directly to `void *param`
+ * @param[in] param callback function parameter.
+ * @param[in] asThread if the given value is true, then the reception handler will run as a thread.
  */
-void TCPServer::setReceptionHandler(void (*func)(SynapSock &, void *), void *param){
+void TCPServer::setReceptionHandler(void (*func)(SynapSock &, void *), void *param, bool asThread){
   pthread_mutex_lock(&(this->mtx));
   pthread_mutex_lock(&(this->wmtx));
   this->receptionCallbackFunction = (const void *) func;
   this->receptionCallbackParam = param;
+  this->receptionHandlerAsThread = asThread;
   pthread_mutex_unlock(&(this->mtx));
   pthread_mutex_unlock(&(this->wmtx));
+}
+
+/**
+ * @brief Method overloading setReceptionHandler. Set handler to receive data sent by remote client for non-thread operation.
+ *
+ * This method must be called before socket communication begins (before calling the `eventCheck` method).
+ *
+ * @param[in] func callback function that has 2 parameters. `SynapSock &` is an active connection. `void *` is a pointer that will connect directly to `void *param`
+ * @param[in] param callback function parameter.
+ */
+void TCPServer::setReceptionHandler(void (*func)(SynapSock &, void *), void *param){
+  this->setReceptionHandler(func, param, false);
 }
 
 /**
