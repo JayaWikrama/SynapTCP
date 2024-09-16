@@ -49,7 +49,7 @@ int main(int argc, char **argv){
         exit(0);
     }
     TCPServer server("0.0.0.0", atoi(argv[1]));
-    server.setReceptionHandler(&receptionCallbackFunction, nullptr);
+    server.setReceptionHandler(&receptionCallbackFunction, nullptr, true);
     TCPServer::SERVER_EVENT_t event;
     SynapSock *activeConnection = nullptr;
     if (server.init() != 0){
