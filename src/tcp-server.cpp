@@ -24,11 +24,39 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <iostream>
 #include "tcp-server.hpp"
+
+struct thHandler_t {
+  ClientCollection *currentCollection;
+  TCPServer *server;
+};
+
+void *receptionThreadHandler(void *ptr){
+  struct thHandler_t *strc = (struct thHandler_t *) ptr;
+  ClientCollection *obj = strc->currentCollection;
+  TCPServer *server = strc->server;
+  pthread_mutex_lock(&(obj->mtx));
+  pthread_cond_signal(&(obj->cond));
+  pthread_mutex_unlock(&(obj->mtx));
+  std::cout << __func__ << ": thread start" << std::endl;
+  void (*callback)(SynapSock &, void *) = (void (*)(SynapSock &, void *))server->getReceptionHandlerFunction();
+  callback(*(obj->client), server->getReceptionHandlerParam());
+  pthread_mutex_lock(&(obj->mtx));
+  pthread_detach(obj->th);
+  obj->th = 0;
+  gettimeofday(&(obj->lastActivity), nullptr);
+  if (obj->pipe[1]) write(obj->pipe[1], "\x30", 1);
+  pthread_mutex_unlock(&(obj->mtx));
+  std::cout << __func__ << ": thread end" << std::endl;
+  return nullptr;
+}
 
 ClientCollection::ClientCollection(const SynapSock *client){
   gettimeofday(&lastActivity, nullptr);
   this->th = 0;
+  this->pipe[0] = 0;
+  this->pipe[1] = 0;
   pthread_cond_init(&(this->cond), nullptr);
   pthread_mutex_init(&(this->mtx), nullptr);
   this->next = nullptr;
@@ -37,8 +65,18 @@ ClientCollection::ClientCollection(const SynapSock *client){
 
 ClientCollection::~ClientCollection(){
   if (client) delete client;
+  if (this->pipe[0] > 0){
+    close(this->pipe[0]);
+  }
+  if (this->pipe[1] > 0){
+    close(this->pipe[1]);
+  }
   pthread_cond_destroy(&(this->cond));
   pthread_mutex_destroy(&(this->mtx));
+  if (this->th > 0){
+    pthread_join(this->th, nullptr);
+    this->th = 0;
+  }
 }
 
 /**
@@ -422,9 +460,13 @@ TCPServer::SERVER_EVENT_t TCPServer::eventCheck(unsigned short timeoutMs){
   FD_SET(this->sockFd, &readfds);
   if (cList != nullptr){
     do {
-      if(cList->client->getSocketFd() > 0){
+      if(cList->pipe[0] <= 0){
         FD_SET(cList->client->getSocketFd(), &readfds);
         max = max < cList->client->getSocketFd() ? cList->client->getSocketFd() : max;
+      }
+      else {
+        FD_SET(cList->pipe[0], &readfds);
+        max = max < cList->pipe[0] ? cList->pipe[0] : max;
       }
       cList = cList->next;
     } while (cList != this->clientList);
@@ -456,6 +498,14 @@ TCPServer::SERVER_EVENT_t TCPServer::eventCheck(unsigned short timeoutMs){
       cList = this->clientList;
       gettimeofday(&tv, NULL);
       do {
+        if (cList->pipe[0] > 0){
+          if (FD_ISSET(cList->pipe[0], &readfds)){
+            close(cList->pipe[0]);
+            close(cList->pipe[1]);
+            cList->pipe[0] = 0;
+            cList->pipe[1] = 0;
+          }
+        }
         if (this->client == cList->client){
           tmp = cList;
         }
@@ -474,23 +524,39 @@ clientEvent:
             return EVENT_CLIENT_DISCONNECTED;
           }
           if (this->receptionCallbackFunction != nullptr){
-            void (*callback)(SynapSock &, void *) = (void (*)(SynapSock &, void *))this->receptionCallbackFunction;
-            callback(*(this->client), this->conReqCallbackParam);
+            if (this->receptionHandlerAsThread == false){
+              void (*callback)(SynapSock &, void *) = (void (*)(SynapSock &, void *))this->receptionCallbackFunction;
+              callback(*(this->client), this->conReqCallbackParam);
+            }
+            else {
+              struct thHandler_t handlerPointer = {cList, this};
+              if (pipe(cList->pipe) == -1){
+                cList->pipe[0] = 0;
+                cList->pipe[1] = 0;
+              }
+              if (pthread_create(&(cList->th), nullptr, receptionThreadHandler, (void *) &handlerPointer) == 0){
+                pthread_mutex_lock(&(cList->mtx));
+                pthread_cond_wait(&(cList->cond), &(cList->mtx));
+                pthread_mutex_unlock(&(cList->mtx));
+              }
+            }
           }
           return EVENT_BYTES_AVAILABLE;
         }
-        if (cList->client->isSocketTimeout(&tv, &(cList->lastActivity))) {
-          if (cList->next != cList){
-            tmp = cList->next;
+        if (cList->pipe[0] <= 0){
+          if (cList->client->isSocketTimeout(&tv, &(cList->lastActivity))) {
+            if (cList->next != cList){
+              tmp = cList->next;
+            }
+            else {
+              tmp = nullptr;
+            }
+            this->removeClient(cList->client);
+            if (tmp != nullptr) this->client = tmp->client;
+            pthread_mutex_unlock(&(this->mtx));
+            pthread_mutex_unlock(&(this->wmtx));
+            return EVENT_CLIENT_DISCONNECTED;
           }
-          else {
-            tmp = nullptr;
-          }
-          this->removeClient(cList->client);
-          if (tmp != nullptr) this->client = tmp->client;
-          pthread_mutex_unlock(&(this->mtx));
-          pthread_mutex_unlock(&(this->wmtx));
-          return EVENT_CLIENT_DISCONNECTED;
         }
         cList = cList->next;
       } while(cList != this->clientList);

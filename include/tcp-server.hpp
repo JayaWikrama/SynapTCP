@@ -66,6 +66,7 @@ class ClientCollection {
     pthread_t th;
     pthread_cond_t cond;
     pthread_mutex_t mtx;
+    int pipe[2];
     ClientCollection *next;
 
     ClientCollection(const SynapSock *client);
