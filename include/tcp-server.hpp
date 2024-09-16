@@ -351,5 +351,19 @@ class TCPServer : public SynapSock {
      * @param param callback function parameter.
      */
     void setReceptionHandler(void (*func)(SynapSock &, void *), void *param);
+
+    /**
+     * @brief Retrieves the pointer address for the data reception handler function.
+     *
+     * @return pointer of reception handler function.
+     */
+    const void *getReceptionHandlerFunction();
+
+    /**
+     * @brief Retrieves the pointer address for the data reception handler parameter.
+     *
+     * @return pointer of reception handler parameter.
+     */
+    void *getReceptionHandlerParam();
 };
 #endif

@@ -586,3 +586,21 @@ void TCPServer::setReceptionHandler(void (*func)(SynapSock &, void *), void *par
   pthread_mutex_unlock(&(this->mtx));
   pthread_mutex_unlock(&(this->wmtx));
 }
+
+/**
+ * @brief Retrieves the pointer address for the data reception handler function.
+ *
+ * @return pointer of reception handler function.
+ */
+const void *TCPServer::getReceptionHandlerFunction(){
+  return this->receptionCallbackFunction;
+}
+
+/**
+ * @brief Retrieves the pointer address for the data reception handler parameter.
+ *
+ * @return pointer of reception handler parameter.
+ */
+void *TCPServer::getReceptionHandlerParam(){
+  return this->receptionCallbackParam;
+}
