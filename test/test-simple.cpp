@@ -12,6 +12,9 @@ static bool isRun = true;
 static pthread_mutex_t mtx;
 static pthread_cond_t cond;
 
+const char *TEST_STR_1 = "TCP::EchoTest";
+const char *TEST_STR_2 = "qwerty1234567890";
+
 void receptionCallbackFunction(SynapSock &connection, void *param){
     if (connection.receiveData() == 0){
         std::cout << "Data Received form " << connection.getAddress() << ":" << connection.getPort() << std::endl;
@@ -475,17 +478,17 @@ TEST_F(TCPSimpleTest, communicationTest_1) {
     std::vector <unsigned char> tmp;
     ASSERT_EQ(client.setPort(4431), true);
     ASSERT_EQ(client.init(), 0);
-    ASSERT_EQ(client.sendData("TCP::EchoTest"), 0);
+    ASSERT_EQ(client.sendData(TEST_STR_1), 0);
     ASSERT_EQ(client.receiveData(), 0);
     client.closeSocket();
     ASSERT_EQ(client.getDataSize(), 13);
     ASSERT_EQ(client.getBuffer(buffer, sizeof(buffer)), 13);
-    ASSERT_EQ(memcmp(buffer, (const unsigned char *) "TCP::EchoTest", 13), 0);
+    ASSERT_EQ(memcmp(buffer, (const unsigned char *) TEST_STR_1, 13), 0);
     ASSERT_EQ(client.getBuffer(tmp), 13);
-    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) "TCP::EchoTest", 13), 0);
+    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) TEST_STR_1, 13), 0);
     tmp = client.getBufferAsVector();
     ASSERT_EQ(tmp.size(), 13);
-    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) "TCP::EchoTest", 13), 0);
+    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) TEST_STR_1, 13), 0);
     ASSERT_EQ(client.getRemainingDataSize(), 0);
     ASSERT_EQ(client.getRemainingBuffer(buffer, sizeof(buffer)), 0);
     ASSERT_EQ(client.getRemainingBuffer(tmp), 0);
@@ -500,17 +503,17 @@ TEST_F(TCPSimpleTest, communicationTest_2) {
     std::vector <unsigned char> tmp;
     ASSERT_EQ(client.setPort(4431), true);
     ASSERT_EQ(client.init(), 0);
-    ASSERT_EQ(client.sendData("TCP::EchoTest"), 0);
+    ASSERT_EQ(client.sendData(TEST_STR_1), 0);
     ASSERT_EQ(client.receiveData(), 0);
     client.closeSocket();
     ASSERT_EQ(client.getDataSize(), 13);
     ASSERT_EQ(client.getBuffer(buffer, sizeof(buffer)), 8);
-    ASSERT_EQ(memcmp(buffer, (const unsigned char *) "TCP::Ech", 8), 0);
+    ASSERT_EQ(memcmp(buffer, (const unsigned char *) TEST_STR_1, 8), 0);
     ASSERT_EQ(client.getBuffer(tmp), 13);
-    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) "TCP::EchoTest", 13), 0);
+    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) TEST_STR_1, 13), 0);
     tmp = client.getBufferAsVector();
     ASSERT_EQ(tmp.size(), 13);
-    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) "TCP::EchoTest", 13), 0);
+    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) TEST_STR_1, 13), 0);
     ASSERT_EQ(client.getRemainingDataSize(), 0);
     ASSERT_EQ(client.getRemainingBuffer(buffer, sizeof(buffer)), 0);
     ASSERT_EQ(client.getRemainingBuffer(tmp), 0);
@@ -526,16 +529,16 @@ TEST_F(TCPSimpleTest, communicationTest_3) {
     ASSERT_EQ(client.setPort(4431), true);
     ASSERT_EQ(client.init(), 0);
     for (int i = 0; i < 5; i++){
-        ASSERT_EQ(client.sendData("TCP::EchoTest"), 0);
+        ASSERT_EQ(client.sendData(TEST_STR_1), 0);
         ASSERT_EQ(client.receiveData(), 0);
         ASSERT_EQ(client.getDataSize(), 13);
         ASSERT_EQ(client.getBuffer(buffer, sizeof(buffer)), 13);
-        ASSERT_EQ(memcmp(buffer, (const unsigned char *) "TCP::EchoTest", 13), 0);
+        ASSERT_EQ(memcmp(buffer, (const unsigned char *) TEST_STR_1, 13), 0);
         ASSERT_EQ(client.getBuffer(tmp), 13);
-        ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) "TCP::EchoTest", 13), 0);
+        ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) TEST_STR_1, 13), 0);
         tmp = client.getBufferAsVector();
         ASSERT_EQ(tmp.size(), 13);
-        ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) "TCP::EchoTest", 13), 0);
+        ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) TEST_STR_1, 13), 0);
         ASSERT_EQ(client.getRemainingDataSize(), 0);
         ASSERT_EQ(client.getRemainingBuffer(buffer, sizeof(buffer)), 0);
         ASSERT_EQ(client.getRemainingBuffer(tmp), 0);
@@ -546,7 +549,7 @@ TEST_F(TCPSimpleTest, communicationTest_3) {
         usleep(125000);
     }
     usleep(130000);
-    ASSERT_EQ(client.sendData("TCP::EchoTest"), 0);
+    ASSERT_EQ(client.sendData(TEST_STR_1), 0);
     ASSERT_EQ(client.receiveData(), 2);
     client.closeSocket();
     ASSERT_EQ(client.getBuffer(buffer, sizeof(buffer)), 0);
@@ -565,7 +568,7 @@ TEST_F(TCPSimpleTest, communicationTest_3) {
 
 TEST_F(TCPSimpleTest, communicationTest_4) {
     unsigned char buffer[64];
-    std::string sdata = "TCP::EchoTestTCP::EchoTestTCP::EchoTestTCP::EchoTestTCP::EchoTest";
+    std::string sdata = std::string(TEST_STR_1) + std::string(TEST_STR_1) + std::string(TEST_STR_1) + std::string(TEST_STR_1) + std::string(TEST_STR_1);
     std::vector <unsigned char> tmp;
     ASSERT_EQ(client.setPort(4431), true);
     ASSERT_EQ(client.init(), 0);
@@ -611,7 +614,7 @@ TEST_F(TCPSimpleTest, communicationTest_4) {
 
 TEST_F(TCPSimpleTest, communicationTest_with_delayed_bytes) {
     unsigned char buffer[64];
-    std::string sdata = "TCP::EchoTestTCP::EchoTestTCP::EchoTestTCP::EchoTestTCP::EchoTest";
+    std::string sdata = std::string(TEST_STR_1) + std::string(TEST_STR_1) + std::string(TEST_STR_1) + std::string(TEST_STR_1) + std::string(TEST_STR_1);
     std::vector <unsigned char> tmp;
     server.setReceptionHandler(&receptionCallbackFunctionEchoDelay, (void *) (long) 50);
     ASSERT_EQ(client.setPort(4431), true);
@@ -657,26 +660,27 @@ TEST_F(TCPSimpleTest, communicationTest_startBytes) {
     ASSERT_EQ(client.setKeepAliveMs(50), true);
     gettimeofday(&tvStart, NULL);
     ASSERT_EQ(client.init(), 0);
-    ASSERT_EQ(client.sendData((const unsigned char *) "qwerty1234567890", 16), 0);
-    ASSERT_EQ(client.receiveStartBytes((const unsigned char *) "1234", 4), 0);
+    ASSERT_EQ(client.sendData((const unsigned char *) TEST_STR_2, 16), 0);
+    ASSERT_EQ(client.receiveStartBytes((const unsigned char *) (TEST_STR_2 + 6), 4), 0);
     gettimeofday(&tvEnd, NULL);
     diffTime = (tvEnd.tv_sec - tvStart.tv_sec) * 1000 + (tvEnd.tv_usec - tvStart.tv_usec) / 1000;
     ASSERT_EQ(diffTime >= 0 && diffTime <= 50, true);
     ASSERT_EQ(client.getDataSize(), 4);
     ASSERT_EQ(client.getBuffer(buffer, sizeof(buffer)), 4);
-    ASSERT_EQ(memcmp(buffer, (const unsigned char *) "1234", 4), 0);
+    ASSERT_EQ(memcmp(buffer, (const unsigned char *) (TEST_STR_2 + 6), 4), 0);
     ASSERT_EQ(client.getBuffer(tmp), 4);
     ASSERT_EQ(tmp.size(), 4);
-    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) "1234", 4), 0);
+    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) (TEST_STR_2 + 6), 4), 0);
     ASSERT_EQ(client.getRemainingDataSize(), 6);
     ASSERT_EQ(client.getRemainingBuffer(buffer, sizeof(buffer)), 6);
-    ASSERT_EQ(memcmp(buffer, (const unsigned char *) "567890", 6), 0);
+    ASSERT_EQ(memcmp(buffer, (const unsigned char *) (TEST_STR_2 + 10), 6), 0);
     ASSERT_EQ(client.getRemainingBuffer(tmp), 6);
     ASSERT_EQ(tmp.size(), 6);
-    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) "567890", 6), 0);
+    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) (TEST_STR_2 + 10), 6), 0);
 }
 
 TEST_F(TCPSimpleTest, communicationTest_startBytes_ov1) {
+    char data[5];
     unsigned char buffer[8];
     pthread_t thread;
     std::vector <unsigned char> tmp;
@@ -686,26 +690,29 @@ TEST_F(TCPSimpleTest, communicationTest_startBytes_ov1) {
     ASSERT_EQ(client.setKeepAliveMs(50), true);
     gettimeofday(&tvStart, NULL);
     ASSERT_EQ(client.init(), 0);
-    ASSERT_EQ(client.sendData("qwerty1234567890"), 0);
-    ASSERT_EQ(client.receiveStartBytes("1234"), 0);
+    ASSERT_EQ(client.sendData(TEST_STR_2), 0);
+    strncpy(data, TEST_STR_2 + 6, 4);
+    data[4] = 0x00;
+    ASSERT_EQ(client.receiveStartBytes(data), 0);
     gettimeofday(&tvEnd, NULL);
     diffTime = (tvEnd.tv_sec - tvStart.tv_sec) * 1000 + (tvEnd.tv_usec - tvStart.tv_usec) / 1000;
     ASSERT_EQ(diffTime >= 0 && diffTime <= 50, true);
     ASSERT_EQ(client.getDataSize(), 4);
     ASSERT_EQ(client.getBuffer(buffer, sizeof(buffer)), 4);
-    ASSERT_EQ(memcmp(buffer, (const unsigned char *) "1234", 4), 0);
+    ASSERT_EQ(memcmp(buffer, (const unsigned char *) (TEST_STR_2 + 6), 4), 0);
     ASSERT_EQ(client.getBuffer(tmp), 4);
     ASSERT_EQ(tmp.size(), 4);
-    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) "1234", 4), 0);
+    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) (TEST_STR_2 + 6), 4), 0);
     ASSERT_EQ(client.getRemainingDataSize(), 6);
     ASSERT_EQ(client.getRemainingBuffer(buffer, sizeof(buffer)), 6);
-    ASSERT_EQ(memcmp(buffer, (const unsigned char *) "567890", 6), 0);
+    ASSERT_EQ(memcmp(buffer, (const unsigned char *) (TEST_STR_2 + 10), 6), 0);
     ASSERT_EQ(client.getRemainingBuffer(tmp), 6);
     ASSERT_EQ(tmp.size(), 6);
-    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) "567890", 6), 0);
+    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) (TEST_STR_2 + 10), 6), 0);
 }
 
 TEST_F(TCPSimpleTest, communicationTest_startBytes_ov2) {
+    char data[5];
     unsigned char buffer[8];
     pthread_t thread;
     std::vector <unsigned char> tmp;
@@ -715,27 +722,29 @@ TEST_F(TCPSimpleTest, communicationTest_startBytes_ov2) {
     ASSERT_EQ(client.setKeepAliveMs(50), true);
     gettimeofday(&tvStart, NULL);
     ASSERT_EQ(client.init(), 0);
-    ASSERT_EQ(client.sendData(std::string("qwerty1234567890")), 0);
-    ASSERT_EQ(client.receiveStartBytes(std::string("1234")), 0);
+    ASSERT_EQ(client.sendData(std::string(TEST_STR_2)), 0);
+    strncpy(data, TEST_STR_2 + 6, 4);
+    data[4] = 0x00;
+    ASSERT_EQ(client.receiveStartBytes(std::string(data)), 0);
     gettimeofday(&tvEnd, NULL);
     diffTime = (tvEnd.tv_sec - tvStart.tv_sec) * 1000 + (tvEnd.tv_usec - tvStart.tv_usec) / 1000;
     ASSERT_EQ(diffTime >= 0 && diffTime <= 50, true);
     ASSERT_EQ(client.getDataSize(), 4);
     ASSERT_EQ(client.getBuffer(buffer, sizeof(buffer)), 4);
-    ASSERT_EQ(memcmp(buffer, (const unsigned char *) "1234", 4), 0);
+    ASSERT_EQ(memcmp(buffer, (const unsigned char *) (TEST_STR_2 + 6), 4), 0);
     ASSERT_EQ(client.getBuffer(tmp), 4);
     ASSERT_EQ(tmp.size(), 4);
-    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) "1234", 4), 0);
+    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) (TEST_STR_2 + 6), 4), 0);
     ASSERT_EQ(client.getRemainingDataSize(), 6);
     ASSERT_EQ(client.getRemainingBuffer(buffer, sizeof(buffer)), 6);
-    ASSERT_EQ(memcmp(buffer, (const unsigned char *) "567890", 6), 0);
+    ASSERT_EQ(memcmp(buffer, (const unsigned char *) (TEST_STR_2 + 10), 6), 0);
     ASSERT_EQ(client.getRemainingBuffer(tmp), 6);
     ASSERT_EQ(tmp.size(), 6);
-    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) "567890", 6), 0);
+    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) (TEST_STR_2 + 10), 6), 0);
 }
 
 TEST_F(TCPSimpleTest, communicationTest_startBytes_ov3) {
-    const char *data = "qwerty1234567890";
+    const char *data = TEST_STR_2;
     unsigned char buffer[8];
     pthread_t thread;
     std::vector <unsigned char> tmp;
@@ -754,14 +763,14 @@ TEST_F(TCPSimpleTest, communicationTest_startBytes_ov3) {
     ASSERT_EQ(diffTime >= 0 && diffTime <= 50, true);
     ASSERT_EQ(client.getDataSize(), 4);
     ASSERT_EQ(client.getBuffer(buffer, sizeof(buffer)), 4);
-    ASSERT_EQ(memcmp(buffer, (const unsigned char *) "1234", 4), 0);
+    ASSERT_EQ(memcmp(buffer, (const unsigned char *) (TEST_STR_2 + 6), 4), 0);
     ASSERT_EQ(client.getBuffer(tmp), 4);
     ASSERT_EQ(tmp.size(), 4);
-    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) "1234", 4), 0);
+    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) (TEST_STR_2 + 6), 4), 0);
     ASSERT_EQ(client.getRemainingDataSize(), 6);
     ASSERT_EQ(client.getRemainingBuffer(buffer, sizeof(buffer)), 6);
-    ASSERT_EQ(memcmp(buffer, (const unsigned char *) "567890", 6), 0);
+    ASSERT_EQ(memcmp(buffer, (const unsigned char *) (TEST_STR_2 + 10), 6), 0);
     ASSERT_EQ(client.getRemainingBuffer(tmp), 6);
     ASSERT_EQ(tmp.size(), 6);
-    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) "567890", 6), 0);
+    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) (TEST_STR_2 + 10), 6), 0);
 }
