@@ -799,7 +799,7 @@ int Socket::receiveData(size_t sz, bool dontSplitRemainingData){
         this->data.push_back(tmp[idx]);
       }
     }
-  } while (bytes > 0 && sz == 0);
+  } while (bytes > 0 && (sz == 0 || this->data.size() < sz));
   if (this->data.size() == 0){
     pthread_mutex_unlock(&(this->mtx));
     return 2;
