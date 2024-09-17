@@ -19,6 +19,19 @@ void receptionCallbackFunction(SynapSock &connection, void *param){
     }
 }
 
+void receptionCallbackFunctionEchoDelay(SynapSock &connection, void *param){
+    if (connection.receiveData() == 0){
+        std::vector <unsigned char> data;
+        int mdelay = (int) (long) param;
+        std::cout << "Data Received form " << connection.getAddress() << ":" << connection.getPort() << std::endl;
+        data = connection.getBufferAsVector();
+        for (int i = 0; i < data.size(); i++){
+            connection.sendData(data.data() + i, 1);
+            usleep(1000 * mdelay);
+        }
+    }
+}
+
 void *echoServer(void *param){
     if (isRun == false) return nullptr;
     unsigned char buffer[1024];
@@ -577,6 +590,44 @@ TEST_F(TCPSimpleTest, communicationTest_4) {
         tmp = client.getRemainingBufferAsVector();
         ASSERT_EQ(tmp.size(), (sdata.length() - 13 * (i + 1)));
         ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) sdata.c_str() + 13 * (i + 1), (sdata.length() - 13 * (i + 1))), 0);
+        usleep(125000);
+    }
+    ASSERT_EQ(client.sendData(sdata), 0);
+    ASSERT_EQ(client.receiveData(), 2);
+    client.closeSocket();
+    ASSERT_EQ(client.getBuffer(buffer, sizeof(buffer)), 0);
+    ASSERT_EQ(buffer[0], 0x00);
+    ASSERT_EQ(client.getBuffer(tmp), 0);
+    tmp = client.getBufferAsVector();
+    ASSERT_EQ(tmp.size(), 0);
+    ASSERT_EQ(client.getRemainingDataSize(), 0);
+    ASSERT_EQ(client.getRemainingBuffer(buffer, sizeof(buffer)), 0);
+    ASSERT_EQ(client.getRemainingBuffer(tmp), 0);
+    ASSERT_EQ(tmp.size(), 0);
+    tmp.clear();
+    tmp = client.getRemainingBufferAsVector();
+    ASSERT_EQ(tmp.size(), 0);
+}
+
+TEST_F(TCPSimpleTest, communicationTest_with_delayed_bytes) {
+    unsigned char buffer[64];
+    std::string sdata = "TCP::EchoTestTCP::EchoTestTCP::EchoTestTCP::EchoTestTCP::EchoTest";
+    std::vector <unsigned char> tmp;
+    server.setReceptionHandler(&receptionCallbackFunctionEchoDelay, (void *) (long) 50);
+    ASSERT_EQ(client.setPort(4431), true);
+    ASSERT_EQ(client.init(), 0);
+    ASSERT_EQ(client.setKeepAliveMs(75), true);
+    ASSERT_EQ(client.sendData(sdata), 0);
+    for (int i = 0; i < 5; i++){
+        ASSERT_EQ(client.receiveData(13), 0);
+        ASSERT_EQ(client.getDataSize(), 13);
+        ASSERT_EQ(client.getBuffer(buffer, sizeof(buffer)), 13);
+        ASSERT_EQ(memcmp(buffer, (const unsigned char *) sdata.c_str(), 13), 0);
+        ASSERT_EQ(client.getBuffer(tmp), 13);
+        ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) sdata.c_str(), 13), 0);
+        tmp = client.getBufferAsVector();
+        ASSERT_EQ(tmp.size(), 13);
+        ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) sdata.c_str(), 13), 0);
         usleep(125000);
     }
     ASSERT_EQ(client.sendData(sdata), 0);
