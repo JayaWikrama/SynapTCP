@@ -1114,3 +1114,30 @@ TEST_F(TCPSimpleTest, negativeCommunicationTest_try_to_connecting_invalid_url) {
     tmp = client.getRemainingBufferAsVector();
     ASSERT_EQ(tmp.size(), 0);
 }
+
+TEST_F(TCPSimpleTest, negativeCommunicationTest_no_input_bytes_available) {
+    unsigned char buffer[8];
+    pthread_t thread;
+    std::vector <unsigned char> tmp;
+    struct timeval tvStart, tvEnd;
+    int diffTime = 0;
+    ASSERT_EQ(client.setPort(4431), true);
+    ASSERT_EQ(client.setKeepAliveMs(50), true);
+    gettimeofday(&tvStart, NULL);
+    ASSERT_EQ(client.init(), 0);
+    ASSERT_EQ(client.receiveData(1), 2);
+    gettimeofday(&tvEnd, NULL);
+    diffTime = (tvEnd.tv_sec - tvStart.tv_sec) * 1000 + (tvEnd.tv_usec - tvStart.tv_usec) / 1000;
+    ASSERT_EQ(diffTime >= 245 && diffTime <= 275, true);
+    ASSERT_EQ(client.getDataSize(), 0);
+    ASSERT_EQ(client.getBuffer(buffer, sizeof(buffer)), 0);
+    ASSERT_EQ(client.getBuffer(tmp), 0);
+    tmp.clear();
+    tmp = client.getBufferAsVector();
+    ASSERT_EQ(tmp.size(), 0);
+    ASSERT_EQ(client.getRemainingDataSize(), 0);
+    ASSERT_EQ(client.getRemainingBuffer(buffer, sizeof(buffer)), 0);
+    tmp.clear();
+    tmp = client.getRemainingBufferAsVector();
+    ASSERT_EQ(tmp.size(), 0);
+}
