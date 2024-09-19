@@ -1141,3 +1141,37 @@ TEST_F(TCPSimpleTest, negativeCommunicationTest_no_input_bytes_available) {
     tmp = client.getRemainingBufferAsVector();
     ASSERT_EQ(tmp.size(), 0);
 }
+
+TEST_F(TCPSimpleTest, negativeCommunicationTest_rcvStopBytes) {
+    unsigned char buffer[16];
+    pthread_t thread;
+    std::vector <unsigned char> tmp;
+    struct timeval tvStart, tvEnd;
+    int diffTime = 0;
+    ASSERT_EQ(client.setPort(4431), true);
+    ASSERT_EQ(client.setKeepAliveMs(50), true);
+    gettimeofday(&tvStart, NULL);
+    ASSERT_EQ(client.init(), 0);
+    ASSERT_EQ(client.sendData((const unsigned char *) TEST_STR_4, 16), 0);
+    ASSERT_EQ(client.receiveStopBytes((const unsigned char *) TEST_STR_4 + 1, 4), 3);
+    gettimeofday(&tvEnd, NULL);
+    diffTime = (tvEnd.tv_sec - tvStart.tv_sec) * 1000 + (tvEnd.tv_usec - tvStart.tv_usec) / 1000;
+    ASSERT_EQ(diffTime >= 0 && diffTime <= 50, true);
+    ASSERT_EQ(client.getDataSize(), 16);
+    ASSERT_EQ(client.getBuffer(buffer, sizeof(buffer)), 16);
+    ASSERT_NE(memcmp(buffer, (const unsigned char *) TEST_STR_4 + 1, 4), 0);
+    ASSERT_EQ(client.getBuffer(tmp), 16);
+    ASSERT_EQ(tmp.size(), 16);
+    ASSERT_NE(memcmp(tmp.data(), (const unsigned char *) TEST_STR_4 + 1, 4), 0);
+    tmp.clear();
+    tmp = client.getBufferAsVector();
+    ASSERT_EQ(tmp.size(), 16);
+    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) TEST_STR_4, 4), 0);
+    ASSERT_EQ(client.getRemainingDataSize(), 0);
+    ASSERT_EQ(client.getRemainingBuffer(buffer, sizeof(buffer)), 0);
+    ASSERT_EQ(client.getRemainingBuffer(tmp), 0);
+    ASSERT_EQ(tmp.size(), 0);
+    tmp.clear();
+    tmp = client.getRemainingBufferAsVector();
+    ASSERT_EQ(tmp.size(), 0);
+}
