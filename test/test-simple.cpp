@@ -1059,3 +1059,30 @@ TEST_F(TCPSimpleTest, communicationTest_rcvNBytes) {
     ASSERT_EQ(tmp.size(), 77);
     ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) (TEST_STR_3 + 385), 77), 0);
 }
+
+TEST_F(TCPSimpleTest, negativeCommunicationTest_not_connected) {
+    unsigned char buffer[8];
+    pthread_t thread;
+    std::vector <unsigned char> tmp;
+    struct timeval tvStart, tvEnd;
+    int diffTime = 0;
+    ASSERT_EQ(client.setPort(4431), true);
+    ASSERT_EQ(client.setKeepAliveMs(50), true);
+    gettimeofday(&tvStart, NULL);
+    ASSERT_EQ(client.sendData((const unsigned char *) TEST_STR_3, 462), 1);
+    ASSERT_EQ(client.receiveData(385), 1);
+    gettimeofday(&tvEnd, NULL);
+    diffTime = (tvEnd.tv_sec - tvStart.tv_sec) * 1000 + (tvEnd.tv_usec - tvStart.tv_usec) / 1000;
+    ASSERT_EQ(diffTime >= 0 && diffTime <= 10, true);
+    ASSERT_EQ(client.getDataSize(), 0);
+    ASSERT_EQ(client.getBuffer(buffer, sizeof(buffer)), 0);
+    ASSERT_EQ(client.getBuffer(tmp), 0);
+    tmp.clear();
+    tmp = client.getBufferAsVector();
+    ASSERT_EQ(tmp.size(), 0);
+    ASSERT_EQ(client.getRemainingDataSize(), 0);
+    ASSERT_EQ(client.getRemainingBuffer(buffer, sizeof(buffer)), 0);
+    tmp.clear();
+    tmp = client.getRemainingBufferAsVector();
+    ASSERT_EQ(tmp.size(), 0);
+}
