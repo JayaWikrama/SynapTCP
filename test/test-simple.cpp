@@ -1123,6 +1123,7 @@ TEST_F(TCPSimpleTest, negativeCommunicationTest_no_input_bytes_available) {
     int diffTime = 0;
     ASSERT_EQ(client.setPort(4431), true);
     ASSERT_EQ(client.setKeepAliveMs(50), true);
+    ASSERT_EQ(client.setTimeout(250), true);
     gettimeofday(&tvStart, NULL);
     ASSERT_EQ(client.init(), 0);
     ASSERT_EQ(client.receiveData(1), 2);
