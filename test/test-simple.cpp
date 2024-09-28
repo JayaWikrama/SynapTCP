@@ -7,10 +7,10 @@
 #include "tcp-client.hpp"
 #include "tcp-server.hpp"
 
-static bool isRun = true;
+bool isRun = true;
 
-static pthread_mutex_t mtx;
-static pthread_cond_t cond;
+pthread_mutex_t mtx;
+pthread_cond_t cond;
 
 const char *TEST_STR_1 = "TCP::EchoTest";
 const char *TEST_STR_2 = "qwerty1234567890";
