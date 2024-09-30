@@ -138,3 +138,34 @@ TEST_F(TCPFramedDataTest, OperatorOverloading_3) {
     frame = client[4];
     ASSERT_EQ(frame, nullptr);
 }
+
+TEST_F(TCPFramedDataTest, OperatorOverloading_4) {
+    unsigned char buffer[8];
+    std::vector <unsigned char> tmp;
+    DataFrame startBytes(DataFrame::FRAME_TYPE_START_BYTES, "1234");
+    DataFrame cmdBytes(DataFrame::FRAME_TYPE_COMMAND, 1);
+    cmdBytes.setPostExecuteFunction((const void *) &setupLengthByCommand, nullptr);
+    DataFrame dataBytes(DataFrame::FRAME_TYPE_DATA);
+    DataFrame stopBytes(DataFrame::FRAME_TYPE_STOP_BYTES, "90-=");
+    client = startBytes + cmdBytes + dataBytes + stopBytes;
+    ASSERT_EQ(client.getFormat()->getDataFrameFormat(),
+              "FRAME_TYPE_START_BYTES[size:4]:<<31323334>><<exeFunc:0>><<postFunc:0>>\n"
+              "FRAME_TYPE_COMMAND[size:1]:<<>><<exeFunc:0>><<postFunc:" + std::to_string((unsigned long) &setupLengthByCommand) + ">>\n"
+              "FRAME_TYPE_DATA[size:0]:<<>><<exeFunc:0>><<postFunc:0>>\n"
+              "FRAME_TYPE_STOP_BYTES[size:4]:<<39302D3D>><<exeFunc:0>><<postFunc:0>>\n");
+    DataFrame *frame = nullptr;
+    frame = client[DataFrame::FRAME_TYPE_START_BYTES];
+    ASSERT_NE(frame, nullptr);
+    ASSERT_EQ(frame->getSize(), 4);
+    frame = client[DataFrame::FRAME_TYPE_COMMAND];
+    ASSERT_NE(frame, nullptr);
+    ASSERT_EQ(frame->getSize(), 1);
+    frame = client[DataFrame::FRAME_TYPE_DATA];
+    ASSERT_NE(frame, nullptr);
+    ASSERT_EQ(frame->getSize(), 0);
+    frame = client[DataFrame::FRAME_TYPE_STOP_BYTES];
+    ASSERT_NE(frame, nullptr);
+    ASSERT_EQ(frame->getSize(), 4);
+    frame = client[DataFrame::FRAME_TYPE_VALIDATOR];
+    ASSERT_EQ(frame, nullptr);
+}
