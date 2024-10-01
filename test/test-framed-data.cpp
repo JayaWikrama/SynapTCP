@@ -227,3 +227,21 @@ TEST_F(TCPFramedDataTest, OperatorOverloading_5) {
     frame = client[{DataFrame::FRAME_TYPE_VALIDATOR}];
     ASSERT_EQ(frame, nullptr);
 }
+
+TEST_F(TCPFramedDataTest, OperatorOverloading_6) {
+    unsigned char buffer[8];
+    std::vector <unsigned char> tmp;
+    DataFrame startBytes(DataFrame::FRAME_TYPE_START_BYTES, "1234");
+    DataFrame cmdBytes(DataFrame::FRAME_TYPE_COMMAND, "5");
+    DataFrame dataBytes(DataFrame::FRAME_TYPE_DATA, "678");
+    DataFrame stopBytes(DataFrame::FRAME_TYPE_STOP_BYTES, "90-=");
+    client = startBytes + cmdBytes + dataBytes + stopBytes;
+    ASSERT_EQ(client.getFormat()->getDataFrameFormat(),
+              "FRAME_TYPE_START_BYTES[size:4]:<<31323334>><<exeFunc:0>><<postFunc:0>>\n"
+              "FRAME_TYPE_COMMAND[size:1]:<<35>><<exeFunc:0>><<postFunc:0>>\n"
+              "FRAME_TYPE_DATA[size:3]:<<363738>><<exeFunc:0>><<postFunc:0>>\n"
+              "FRAME_TYPE_STOP_BYTES[size:4]:<<39302D3D>><<exeFunc:0>><<postFunc:0>>\n");
+    tmp = client.getSpecificBufferAsVector(DataFrame::FRAME_TYPE_COMMAND, DataFrame::FRAME_TYPE_DATA);
+    ASSERT_EQ(tmp.size(), 4);
+    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) "5678", 4), 0);
+}
