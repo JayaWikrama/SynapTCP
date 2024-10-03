@@ -273,3 +273,43 @@ TEST_F(TCPFramedDataTest, OperatorOverloading_7) {
     ASSERT_EQ(tmp.size(), 8);
     ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) "QWERASDF", 8), 0);
 }
+
+/* Read Test */
+
+TEST_F(TCPFramedDataTest, SendTest_1) {
+    unsigned char buffer[16];
+    struct timeval tvStart, tvEnd;
+    int diffTime = 0;
+    std::vector <unsigned char> tmp;
+    client.setPort(4431);
+    client.setTimeout(250);
+    client.setKeepAliveMs(1000);
+    DataFrame startBytes(DataFrame::FRAME_TYPE_START_BYTES, "1234");
+    DataFrame cmdBytes(DataFrame::FRAME_TYPE_COMMAND, "5");
+    cmdBytes.setPostExecuteFunction((const void *) &setupLengthByCommand, nullptr);
+    DataFrame dataBytes(DataFrame::FRAME_TYPE_DATA, "678");
+    DataFrame stopBytes(DataFrame::FRAME_TYPE_STOP_BYTES, "90-=");
+    client = startBytes + cmdBytes + dataBytes + stopBytes;
+    ASSERT_EQ(client.getFormat()->getDataFrameFormat(),
+              "FRAME_TYPE_START_BYTES[size:4]:<<31323334>><<exeFunc:0>><<postFunc:0>>\n"
+              "FRAME_TYPE_COMMAND[size:1]:<<35>><<exeFunc:0>><<postFunc:" + std::to_string((unsigned long) &setupLengthByCommand) + ">>\n"
+              "FRAME_TYPE_DATA[size:3]:<<363738>><<exeFunc:0>><<postFunc:0>>\n"
+              "FRAME_TYPE_STOP_BYTES[size:4]:<<39302D3D>><<exeFunc:0>><<postFunc:0>>\n");
+    gettimeofday(&tvStart, NULL);
+    ASSERT_EQ(client.init(), 0);
+    ASSERT_EQ(client.sendFramedData(), 0);
+    ASSERT_EQ(client.receiveFramedData(), 0);
+    gettimeofday(&tvEnd, NULL);
+    diffTime = (tvEnd.tv_sec - tvStart.tv_sec) * 1000 + (tvEnd.tv_usec - tvStart.tv_usec) / 1000;
+    ASSERT_EQ(diffTime >= 0 && diffTime <= 75, true);
+    ASSERT_EQ(client.getDataSize(), 12);
+    ASSERT_EQ(client.getBuffer(buffer, sizeof(buffer)), 12);
+    ASSERT_EQ(memcmp(buffer, (const unsigned char *) "1234567890-=", 12), 0);
+    ASSERT_EQ(client.getBuffer(tmp), 12);
+    ASSERT_EQ(tmp.size(), 12);
+    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) "1234567890-=", 12), 0);
+    ASSERT_EQ(client.getRemainingDataSize(), 0);
+    ASSERT_EQ(client.getRemainingBuffer(buffer, sizeof(buffer)), 0);
+    ASSERT_EQ(client.getRemainingBuffer(tmp), 0);
+    ASSERT_EQ(tmp.size(), 0);
+}
