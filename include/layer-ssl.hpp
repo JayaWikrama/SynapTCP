@@ -43,7 +43,6 @@
 class SSLWarper {
   private:
     SSL_CTX *ctx;                   /*!< The SSL context used for handling SSL/TLS operations. */
-    SSL *ssl;                       /*!< SSL descriptor. */
 
     /**
      * @brief Initializes the OpenSSL library.
@@ -100,9 +99,9 @@ class SSLWarper {
      * The constructor will initialize OpenSSL, create an SSL context depending on whether this instance is for a server
      * or client, and optionally load the certificate and private key from the provided PEM strings.
      *
-     * @param type A CONTEXT_TYPE Enumeration that indicating whether this instance is for a server (true) or a client (false).
-     * @param cert Optional string containing the server's certificate in PEM format. Only used if `is_server` is true.
-     * @param key Optional string containing the server's private key in PEM format. Only used if `is_server` is true.
+     * @param type A CONTEXT_TYPE Enumeration that indicating whether this instance is for a server or a client.
+     * @param cert Optional string containing the server's certificate in PEM format. Only used for server.
+     * @param key Optional string containing the server's private key in PEM format. Only used for server.
      */
     SSLWarper(SSLWarper::CONTEXT_TYPE_t type, const std::string cert, const std::string key);
 
@@ -119,16 +118,16 @@ class SSLWarper {
      * This method creates a new SSL object that will be used to handle the SSL session for the given socket file descriptor.
      *
      * @param sockFd The file descriptor for the TCP connection socket.
-     * @return True if success to create SSL descriptor.
+     * @return Pointer to SSL descriptor.
      */
-    bool createSSL(int sockFd);
+    SSL *createSSL(int sockFd);
 
     /**
      * @brief Accepts an SSL connection on the server side.
      *
      * This method performs the SSL/TLS handshake on the server side, accepting an incoming SSL connection.
      *
-     * @param ssl The SSL object created using `create_ssl`.
+     * @param ssl SSL descriptor.
      * @return True if the SSL handshake was successful, false otherwise.
      */
     bool acceptSSL(SSL *ssl);
@@ -138,7 +137,7 @@ class SSLWarper {
      *
      * This method performs the SSL/TLS handshake on the client side, initiating an SSL connection to a server.
      *
-     * @param ssl The SSL object created using `create_ssl`.
+     * @param ssl SSL descriptor.
      * @return True if the SSL handshake was successful, false otherwise.
      */
     bool connectSSL(SSL *ssl);
@@ -154,12 +153,10 @@ class SSLWarper {
     SSL_CTX *getContext();
 
     /**
-     * @brief Returns the SSL descriptor used by this instance.
-     *
-     * @return A pointer to the SSL descriptor representing SSL connection.
+     * @brief Release SSL descryptor pointer.
      *
      */
-    SSL *getSSLDescriptor();
+    void deleteSSLDescryptor(SSL *ssl);
 };
 
 #endif
