@@ -74,7 +74,7 @@ add_executable(${PROJECT_NAME}-client examples/data-formating.cpp examples/clien
 add_executable(${PROJECT_NAME}-server examples/data-formating.cpp examples/server.cpp)
 
 # Create Unit Test executable
-add_executable(${PROJECT_NAME}-test test/test-simple.cpp test/test-framed-data.cpp)
+add_executable(${PROJECT_NAME}-test test/test-simple.cpp test/test-framed-data.cpp test/test-ssl-simple.cpp)
 
 # Include directories
 target_include_directories(${PROJECT_NAME}-lib PUBLIC
