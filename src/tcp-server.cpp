@@ -94,6 +94,9 @@ TCPServer::TCPServer(){
   this->maxClient = 10;
   this->client = nullptr;
   this->clientList = nullptr;
+#ifdef __STCP_SSL__
+  if (this->sslWarper) delete this->sslWarper;
+#endif
 }
 
 /**
@@ -248,6 +251,11 @@ TCPServer::~TCPServer(){
       tmp = next;
     } while (tmp != this->clientList);
   }
+#ifdef __STCP_SSL__
+  if (this->sslWarper != nullptr){
+    delete this->sslWarper;
+  }
+#endif
 }
 
 /**
@@ -364,9 +372,24 @@ bool TCPServer::addClient(int connFd){
   pthread_mutex_lock(&(this->wmtx));
   client->setSocketFd(connFd);
 #ifdef __STCP_SSL__
-  client->sslConn = this->sslConn;
-  client->sslCtx = nullptr;
-  this->sslConn = nullptr;
+  client->setSSLPointer(nullptr);
+  if (this->useSSL){
+    if (this->sslWarper == nullptr){
+      delete client;
+      return false;
+    }
+    SSL *ssl = this->sslWarper->createSSL(connFd);
+    if (ssl == nullptr){
+      delete client;
+      return false;
+    }
+    if (this->sslWarper->acceptSSL(ssl) == false){
+      SSL_free(ssl);
+      delete client;
+      return false;
+    }
+    client->setSSLPointer(ssl);
+  }
 #endif
   ClientCollection *newClient = new ClientCollection(client);
   if (newClient == nullptr){
@@ -684,3 +707,21 @@ const void *TCPServer::getReceptionHandlerFunction(){
 void *TCPServer::getReceptionHandlerParam(){
   return this->receptionCallbackParam;
 }
+
+#ifdef __STCP_SSL__
+/**
+ * @brief Initialize SSL Warper.
+ *
+ * Initialize warper for SSL Layer protocol.
+ *
+ * @param[in] cert Optional string containing the server's certificate in PEM format. Only used for server.
+ * @param[in] key Optional string containing the server's private key in PEM format. Only used for server.
+ * @return `true` when success.
+ * @return `false` when failed (if the SSL preprocessor is not enabled or SSL handshake is not enabled)
+ */
+bool TCPServer::initializeSSL(const std::string cert, const std::string key){
+  this->sslWarper = new SSLWarper(SSLWarper::CTX_TYPE_SERVER, cert, key);
+  if (this->sslWarper) return true;
+  return false;
+}
+#endif

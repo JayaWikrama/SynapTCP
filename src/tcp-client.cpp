@@ -38,6 +38,9 @@
  * - Initializes the mutex for thread safety.
  */
 TCPClient::TCPClient(){
+#ifdef __STCP_SSL__
+  this->sslWarper = nullptr;
+#endif
   this->status = static_cast<unsigned char>(TCPClient::CLIENT_UNINITIALIZED);
 }
 
@@ -53,6 +56,9 @@ TCPClient::TCPClient(){
  * @param[in] address The address is in the form of an IP address with a size of 4 bytes.
  */
 TCPClient::TCPClient(const unsigned char *address) : SynapSock(address){
+#ifdef __STCP_SSL__
+  this->sslWarper = nullptr;
+#endif
   this->status = static_cast<unsigned char>(TCPClient::CLIENT_UNINITIALIZED);
 }
 
@@ -68,6 +74,9 @@ TCPClient::TCPClient(const unsigned char *address) : SynapSock(address){
  * @param[in] port The port of TCPClient/IP interface.
  */
 TCPClient::TCPClient(const unsigned char *address, int port) : SynapSock(address, port){
+#ifdef __STCP_SSL__
+  this->sslWarper = nullptr;
+#endif
   this->status = static_cast<unsigned char>(TCPClient::CLIENT_UNINITIALIZED);
 }
 
@@ -83,6 +92,9 @@ TCPClient::TCPClient(const unsigned char *address, int port) : SynapSock(address
  * @param[in] address The address is in the form of an IP address with a size of 4 bytes.
  */
 TCPClient::TCPClient(const std::vector <unsigned char> address) : SynapSock(address){
+#ifdef __STCP_SSL__
+  this->sslWarper = nullptr;
+#endif
   this->status = static_cast<unsigned char>(TCPClient::CLIENT_UNINITIALIZED);
 }
 
@@ -98,6 +110,9 @@ TCPClient::TCPClient(const std::vector <unsigned char> address) : SynapSock(addr
  * @param[in] port The port of TCPClient/IP interface.
  */
 TCPClient::TCPClient(const std::vector <unsigned char> address, int port) : SynapSock(address, port){
+#ifdef __STCP_SSL__
+  this->sslWarper = nullptr;
+#endif
   this->status = static_cast<unsigned char>(TCPClient::CLIENT_UNINITIALIZED);
 }
 
@@ -113,6 +128,9 @@ TCPClient::TCPClient(const std::vector <unsigned char> address, int port) : Syna
  * @param[in] address The address in the form of an IP address or domain (in this case, a string in the form of a char pointer).
  */
 TCPClient::TCPClient(const char *address) : SynapSock(address){
+#ifdef __STCP_SSL__
+  this->sslWarper = nullptr;
+#endif
   this->status = static_cast<unsigned char>(TCPClient::CLIENT_UNINITIALIZED);
 }
 
@@ -128,6 +146,9 @@ TCPClient::TCPClient(const char *address) : SynapSock(address){
  * @param[in] port The port of TCPClient/IP interface.
  */
 TCPClient::TCPClient(const char *address, int port) : SynapSock(address, port){
+#ifdef __STCP_SSL__
+  this->sslWarper = nullptr;
+#endif
   this->status = static_cast<unsigned char>(TCPClient::CLIENT_UNINITIALIZED);
 }
 
@@ -143,6 +164,9 @@ TCPClient::TCPClient(const char *address, int port) : SynapSock(address, port){
  * @param[in] address The address in the form of an IP address or domain (string).
  */
 TCPClient::TCPClient(const std::string address) : SynapSock(address){
+#ifdef __STCP_SSL__
+  this->sslWarper = nullptr;
+#endif
   this->status = static_cast<unsigned char>(TCPClient::CLIENT_UNINITIALIZED);
 }
 
@@ -158,6 +182,9 @@ TCPClient::TCPClient(const std::string address) : SynapSock(address){
  * @param[in] port The port of TCPClient/IP interface.
  */
 TCPClient::TCPClient(const std::string address, int port) : SynapSock(address, port){
+#ifdef __STCP_SSL__
+  this->sslWarper = nullptr;
+#endif
   this->status = static_cast<unsigned char>(TCPClient::CLIENT_UNINITIALIZED);
 }
 
@@ -168,7 +195,11 @@ TCPClient::TCPClient(const std::string address, int port) : SynapSock(address, p
  * It ensures that all allocated resources are properly freed, preventing memory leaks.
  */
 TCPClient::~TCPClient(){
-  // do nothing
+#ifdef __STCP_SSL__
+  if (this->sslWarper != nullptr){
+    delete this->sslWarper;
+  }
+#endif
 }
 
 /**
@@ -287,11 +318,57 @@ int TCPClient::init(){
     pthread_mutex_unlock(&(this->wmtx));
     return 8;
   }
+#ifdef __STCP_SSL__
+  if (this->useSSL){
+    if (this->sslWarper == nullptr){
+      close(this->sockFd);
+      this->sockFd = -1;
+      this->status = static_cast<unsigned char>(TCPClient::CLIENT_UNINITIALIZED);
+      pthread_mutex_unlock(&(this->mtx));
+      pthread_mutex_unlock(&(this->wmtx));
+      return 9;
+    }
+    this->sslConn = this->sslWarper->createSSL(this->sockFd);
+    if (this->sslConn == nullptr){
+      close(this->sockFd);
+      this->sockFd = -1;
+      this->status = static_cast<unsigned char>(TCPClient::CLIENT_UNINITIALIZED);
+      pthread_mutex_unlock(&(this->mtx));
+      pthread_mutex_unlock(&(this->wmtx));
+      return 9;
+    }
+    if (this->sslWarper->connectSSL(this->sslConn) == false){
+      SSL_free(this->sslConn);
+      this->sslConn = nullptr;
+      close(this->sockFd);
+      this->sockFd = -1;
+      this->status = static_cast<unsigned char>(TCPClient::CLIENT_UNINITIALIZED);
+      pthread_mutex_unlock(&(this->mtx));
+      pthread_mutex_unlock(&(this->wmtx));
+    }
+  }
+#endif
   this->status = static_cast<unsigned char>(TCPClient::CLIENT_CONNECTED);
   pthread_mutex_unlock(&(this->mtx));
   pthread_mutex_unlock(&(this->wmtx));
   return 0;
 }
+
+#ifdef __STCP_SSL__
+/**
+ * @brief Initialize SSL Warper.
+ *
+ * Initialize warper for SSL Layer protocol.
+ *
+ * @return `true` when success.
+ * @return `false` when failed (if the SSL preprocessor is not enabled or SSL handshake is not enabled)
+ */
+bool TCPClient::initializeSSL(){
+  this->sslWarper = new SSLWarper(SSLWarper::CTX_TYPE_CLIENT, "", "");
+  if (this->sslWarper) return true;
+  return false;
+}
+#endif
 
 TCPClient& TCPClient::operator=(const DataFrame &obj){
   SynapSock::operator=(obj);

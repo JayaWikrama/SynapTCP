@@ -57,7 +57,6 @@ Socket::Socket(){
 #ifdef __STCP_SSL__
   this->sslConnRoutineOkStatus = 0;
   this->sslConn = nullptr;
-  this->sslCtx = nullptr;
 #endif
   this->data.clear();
   this->remainingData.clear();
@@ -448,18 +447,18 @@ bool Socket::setKeepAliveMs(int keepAliveMs){
  *
  * This setter function configures the use of SSL handshake. This helps to improve the security of Socket communication.
  *
- * @param[in] isUseSSL The value true is assigned to enable SSL handshake.
+ * @param[in] useSSL The value true is assigned to enable SSL handshake.
  * @return `true` when success.
  * @return `false` when failed (if the SSL preprocessor is not enabled)
  */
-bool Socket::setIsUseSSL(bool isUseSSL){
+bool Socket::setIsUseSSL(bool useSSL){
 #ifdef __STCP_SSL__
   pthread_mutex_lock(&(this->mtx));
   pthread_mutex_lock(&(this->wmtx));
-  if (this->useSSL == false || isUseSSL == false){
+  if (this->useSSL == false || useSSL == false){
     this->sslVerifyMode = false;
   }
-  this->useSSL = isUseSSL;
+  this->useSSL = useSSL;
   pthread_mutex_unlock(&(this->mtx));
   pthread_mutex_unlock(&(this->wmtx));
   return true;
@@ -497,24 +496,6 @@ bool Socket::setSSLVerifyMode(bool sslVerifyMode){
 }
 
 #ifdef __STCP_SSL__
-/**
- * @brief Sets the SSL CTX pointer.
- *
- * This setter function assign the SSL CTX pointer.
- *
- * @param[in] sslCtx pointer.
- * @return `true` when success.
- * @return `false` when failed (if the SSL preprocessor is not enabled)
- */
-bool Socket::setSSLCTXPointer(SSL_CTX *sslCtx){
-  pthread_mutex_lock(&(this->mtx));
-  pthread_mutex_lock(&(this->wmtx));
-  this->sslCtx = sslCtx;
-  pthread_mutex_unlock(&(this->mtx));
-  pthread_mutex_unlock(&(this->wmtx));
-  return true;
-}
-
 /**
  * @brief Sets the SSL pointer.
  *
@@ -713,7 +694,6 @@ bool Socket::duplicate(Socket &obj){
   obj.useSSL = this->useSSL;
   obj.sslVerifyMode = this->sslVerifyMode;
   obj.sslConnRoutineOkStatus = this->sslConnRoutineOkStatus;
-  obj.sslCtx = this->sslCtx;
   obj.sslConn = this->sslConn;
 #endif
   obj.data.assign(this->data.begin(), this->data.end());
@@ -793,7 +773,20 @@ int Socket::receiveData(size_t sz, bool dontSplitRemainingData){
       }
       pthread_mutex_lock(&(this->mtx));
     }
+#ifdef __STCP_SSL__
+    if (this->useSSL){
+      if (this->sslConn == nullptr){
+        pthread_mutex_unlock(&(this->wmtx));
+        return 1;
+      }
+      bytes = SSL_read(this->sslConn, (void *) tmp, sizeof(tmp));
+    }
+    else {
+      bytes = read(this->sockFd, (void *) tmp, sizeof(tmp));
+    }
+#else
     bytes = read(this->sockFd, (void *) tmp, sizeof(tmp));
+#endif
     if (bytes > 0){
       for (idx = 0; idx < bytes; idx++){
         this->data.push_back(tmp[idx]);
@@ -1353,7 +1346,20 @@ int Socket::sendData(const unsigned char *buffer, size_t sz){
   }
   ssize_t bytes = 0;
   while (total < sz){
+#ifdef __STCP_SSL__
+    if (this->useSSL){
+      if (this->sslConn == nullptr){
+        pthread_mutex_unlock(&(this->wmtx));
+        return 1;
+      }
+      bytes = SSL_write(this->sslConn, (void *) (buffer + total), sz - total);
+    }
+    else {
+      bytes = write(this->sockFd, (void *) (buffer + total), sz - total);
+    }
+#else
     bytes = write(this->sockFd, (void *) (buffer + total), sz - total);
+#endif
     if (bytes > 0){
       total += bytes;
     }
@@ -1455,12 +1461,6 @@ void Socket::closeSocket(){
   this->closeConnection();
   pthread_mutex_lock(&(this->mtx));
   pthread_mutex_lock(&(this->wmtx));
-#ifdef __STCP_SSL__
-  if (this->sslCtx != nullptr && this->useSSL){
-    SSL_CTX_free(this->sslCtx);
-    this->sslCtx = nullptr;
-  }
-#endif
   if (this->sockFd > 0){
     if (!close(this->sockFd)){
       this->sockFd = -1;

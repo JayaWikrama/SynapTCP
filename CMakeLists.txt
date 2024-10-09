@@ -47,6 +47,7 @@ find_package(GTest REQUIRED)
 
 # Specify the source files
 set(SOURCE_FILES
+    src/layer-ssl.cpp
     src/socket.cpp
     src/synapsock.cpp
     src/tcp-client.cpp
@@ -92,19 +93,20 @@ add_dependencies(${PROJECT_NAME}-test DataFrame-lib)
 
 # Link the executable with the library
 target_link_libraries(${PROJECT_NAME}-client PRIVATE ${PROJECT_NAME}-lib DataFrame-lib)
-target_link_libraries(${PROJECT_NAME}-client PUBLIC -lpthread)
+target_link_libraries(${PROJECT_NAME}-client PUBLIC -lpthread -lssl)
 target_link_libraries(${PROJECT_NAME}-server PRIVATE ${PROJECT_NAME}-lib DataFrame-lib)
-target_link_libraries(${PROJECT_NAME}-server PUBLIC -lpthread)
+target_link_libraries(${PROJECT_NAME}-server PUBLIC -lpthread -lssl)
 
 add_subdirectory(external/DataFrame EXCLUDE_FROM_ALL)
 set(USE_EXE_FUNC ON)
 set(USE_POST_EXE_FUNC ON)
 add_definitions(-D__USE_EXE_FUNC)
 add_definitions(-D__USE_POST_FUNC)
+add_definitions(-D__STCP_SSL__)
 
 # Link Unit Test executable with the library
 target_link_libraries(${PROJECT_NAME}-test PRIVATE ${PROJECT_NAME}-lib DataFrame-lib)
-target_link_libraries(${PROJECT_NAME}-test PUBLIC ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} -lpthread)
+target_link_libraries(${PROJECT_NAME}-test PUBLIC ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} -lpthread -lssl)
 
 # Set compiler and linker flags
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0")

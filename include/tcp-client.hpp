@@ -59,9 +59,16 @@
 
 #include "synapsock.hpp"
 
+#ifdef __STCP_SSL__
+#include "layer-ssl.hpp"
+#endif
+
 class TCPClient : public SynapSock {
   private:
     unsigned char status;             /*!< Socket status */
+#ifdef __STCP_SSL__
+    SSLWarper *sslWarper;             /*!< framework to establish TLS/SSL enabled connections (this variable only available if SSL layer mode is activated) */
+#endif
 
   protected:
     typedef enum _CLIENT_STATUS_t {   /*!< List of Socket (client) status */
@@ -226,6 +233,18 @@ class TCPClient : public SynapSock {
      * @return `9` if failed to connect server with SSL handshake (available if SSL layer mode is activated)
      */
     int init();
+
+#ifdef __STCP_SSL__
+    /**
+     * @brief Initialize SSL Warper.
+     *
+     * Initialize warper for SSL Layer protocol.
+     *
+     * @return `true` when success.
+     * @return `false` when failed (if the SSL preprocessor is not enabled or SSL handshake is not enabled)
+     */
+    bool initializeSSL();
+#endif
 
     TCPClient& operator=(const DataFrame &obj);
 

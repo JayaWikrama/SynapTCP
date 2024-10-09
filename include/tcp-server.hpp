@@ -59,6 +59,10 @@
 
 #include "synapsock.hpp"
 
+#ifdef __STCP_SSL__
+#include "layer-ssl.hpp"
+#endif
+
 class ClientCollection {
   public:
     SynapSock *client;
@@ -83,6 +87,9 @@ class TCPServer : public SynapSock {
     void *conReqCallbackParam;              /*!< parameters of the connection request event callback function */
     const void *receptionCallbackFunction;  /*!< callback function that is automatically called when there is a reception event */
     void *receptionCallbackParam;           /*!< parameters of the reception event callback function */
+#ifdef __STCP_SSL__
+    SSLWarper *sslWarper;                   /*!< framework to establish TLS/SSL enabled connections (this variable only available if SSL layer mode is activated) */
+#endif
 
     /* Set some parent method as private method on TCPServer */
     using SynapSock::getFormat;
@@ -378,5 +385,19 @@ class TCPServer : public SynapSock {
      * @return pointer of reception handler parameter.
      */
     void *getReceptionHandlerParam();
+
+#ifdef __STCP_SSL__
+    /**
+     * @brief Initialize SSL Warper.
+     *
+     * Initialize warper for SSL Layer protocol.
+     *
+     * @param[in] cert Optional string containing the server's certificate in PEM format. Only used for server.
+     * @param[in] key Optional string containing the server's private key in PEM format. Only used for server.
+     * @return `true` when success.
+     * @return `false` when failed (if the SSL preprocessor is not enabled or SSL handshake is not enabled)
+     */
+    bool initializeSSL(const std::string cert, const std::string key);
+#endif
 };
 #endif
