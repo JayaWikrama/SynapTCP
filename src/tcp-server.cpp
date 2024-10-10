@@ -95,7 +95,7 @@ TCPServer::TCPServer(){
   this->client = nullptr;
   this->clientList = nullptr;
 #ifdef __STCP_SSL__
-  if (this->sslWarper) delete this->sslWarper;
+  this->sslWarper = nullptr;
 #endif
 }
 
@@ -114,6 +114,9 @@ TCPServer::TCPServer(const unsigned char *address) : SynapSock(address){
   this->maxClient = 10;
   this->client = nullptr;
   this->clientList = nullptr;
+#ifdef __STCP_SSL__
+  this->sslWarper = nullptr;
+#endif
 }
 
 /**
@@ -131,6 +134,9 @@ TCPServer::TCPServer(const unsigned char *address, int port) : SynapSock(address
   this->maxClient = 10;
   this->client = nullptr;
   this->clientList = nullptr;
+#ifdef __STCP_SSL__
+  this->sslWarper = nullptr;
+#endif
 }
 
 /**
@@ -148,6 +154,9 @@ TCPServer::TCPServer(const std::vector <unsigned char> address) : SynapSock(addr
   this->maxClient = 10;
   this->client = nullptr;
   this->clientList = nullptr;
+#ifdef __STCP_SSL__
+  this->sslWarper = nullptr;
+#endif
 }
 
 /**
@@ -165,6 +174,9 @@ TCPServer::TCPServer(const std::vector <unsigned char> address, int port) : Syna
   this->maxClient = 10;
   this->client = nullptr;
   this->clientList = nullptr;
+#ifdef __STCP_SSL__
+  this->sslWarper = nullptr;
+#endif
 }
 
 /**
@@ -182,6 +194,9 @@ TCPServer::TCPServer(const char *address) : SynapSock(address){
   this->maxClient = 10;
   this->client = nullptr;
   this->clientList = nullptr;
+#ifdef __STCP_SSL__
+  this->sslWarper = nullptr;
+#endif
 }
 
 /**
@@ -199,6 +214,9 @@ TCPServer::TCPServer(const char *address, int port) : SynapSock(address, port){
   this->maxClient = 10;
   this->client = nullptr;
   this->clientList = nullptr;
+#ifdef __STCP_SSL__
+  this->sslWarper = nullptr;
+#endif
 }
 
 /**
@@ -216,6 +234,9 @@ TCPServer::TCPServer(const std::string address) : SynapSock(address){
   this->maxClient = 10;
   this->client = nullptr;
   this->clientList = nullptr;
+#ifdef __STCP_SSL__
+  this->sslWarper = nullptr;
+#endif
 }
 
 /**
@@ -233,6 +254,9 @@ TCPServer::TCPServer(const std::string address, int port) : SynapSock(address, p
   this->maxClient = 10;
   this->client = nullptr;
   this->clientList = nullptr;
+#ifdef __STCP_SSL__
+  this->sslWarper = nullptr;
+#endif
 }
 
 /**
