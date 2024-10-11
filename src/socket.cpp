@@ -743,11 +743,48 @@ int Socket::receiveData(size_t sz, bool dontSplitRemainingData){
   }
   ssize_t bytes = 0;
   int idx = 0;
-  unsigned char tmp[128];
+  size_t tmpSz = 0;
+  unsigned char *tmp = nullptr;
+  fd_set readfds;
   this->data.clear();
+  struct timeval tvTmout;
   if (this->remainingData.size() > 0){
     this->data.assign(this->remainingData.begin(), this->remainingData.end());
     this->remainingData.clear();
+  }
+  FD_ZERO(&readfds);
+  FD_SET(this->sockFd, &readfds);
+  tvTmout.tv_sec = this->tvTimeout.tv_sec;
+  tvTmout.tv_usec = this->tvTimeout.tv_usec;
+  idx = select(this->sockFd + 1, &readfds, nullptr, nullptr, &tvTmout);
+  if (idx <= 0){
+    goto process;
+  }
+  else if (FD_ISSET(this->sockFd, &readfds)){
+#ifdef __STCP_SSL__
+    if (this->useSSL){
+      tmpSz = 2048;
+    }
+    else {
+      if (ioctl(this->sockFd, FIONREAD, &tmpSz) < 0){
+        goto process;
+      }
+      if (tmpSz == 0){
+        goto process;
+      }
+    }
+#else
+    if (ioctl(this->sockFd, FIONREAD, &tmpSz) < 0){
+      goto process;
+    }
+    if (tmpSz == 0){
+      goto process;
+    }
+#endif
+    tmp = new unsigned char[tmpSz * sizeof(unsigned char)];
+    if (tmp == nullptr){
+      goto process;
+    }
   }
   do {
     if (this->data.size() > 0) {
@@ -779,13 +816,13 @@ int Socket::receiveData(size_t sz, bool dontSplitRemainingData){
         pthread_mutex_unlock(&(this->wmtx));
         return 1;
       }
-      bytes = SSL_read(this->sslConn, (void *) tmp, sizeof(tmp));
+      bytes = SSL_read(this->sslConn, (void *) tmp, tmpSz);
     }
     else {
-      bytes = read(this->sockFd, (void *) tmp, sizeof(tmp));
+      bytes = read(this->sockFd, (void *) tmp, tmpSz);
     }
 #else
-    bytes = read(this->sockFd, (void *) tmp, sizeof(tmp));
+    bytes = read(this->sockFd, (void *) tmp, tmpSz);
 #endif
     if (bytes > 0){
       for (idx = 0; idx < bytes; idx++){
@@ -793,6 +830,9 @@ int Socket::receiveData(size_t sz, bool dontSplitRemainingData){
       }
     }
   } while (bytes > 0 && (sz == 0 || this->data.size() < sz));
+  delete[] tmp;
+  tmp = nullptr;
+process:
   if (this->data.size() == 0){
     pthread_mutex_unlock(&(this->mtx));
     return 2;
