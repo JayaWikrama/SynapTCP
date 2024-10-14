@@ -536,3 +536,127 @@ TEST_F(SSLSimpleTest, communicationTest_rcvUntillStopBytes_ov3) {
     ASSERT_EQ(tmp.size(), 77);
     ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) (TEST_STR_3 + 385), 77), 0);
 }
+
+TEST_F(SSLSimpleTest, communicationTest_rcvStopBytes) {
+    unsigned char buffer[16];
+    pthread_t thread;
+    std::vector <unsigned char> tmp;
+    struct timeval tvStart, tvEnd;
+    int diffTime = 0;
+    ASSERT_EQ(client.setPort(4431), true);
+    ASSERT_EQ(client.setKeepAliveMs(50), true);
+    gettimeofday(&tvStart, NULL);
+    ASSERT_EQ(client.init(), 0);
+    ASSERT_EQ(client.sendData((const unsigned char *) TEST_STR_4, 16), 0);
+    ASSERT_EQ(client.receiveStopBytes((const unsigned char *) TEST_STR_4, 4), 0);
+    gettimeofday(&tvEnd, NULL);
+    diffTime = (tvEnd.tv_sec - tvStart.tv_sec) * 1000 + (tvEnd.tv_usec - tvStart.tv_usec) / 1000;
+    ASSERT_EQ(diffTime >= 0 && diffTime <= 50, true);
+    ASSERT_EQ(client.getDataSize(), 4);
+    ASSERT_EQ(client.getBuffer(buffer, sizeof(buffer)), 4);
+    ASSERT_EQ(memcmp(buffer, (const unsigned char *) TEST_STR_4, 4), 0);
+    ASSERT_EQ(client.getBuffer(tmp), 4);
+    ASSERT_EQ(tmp.size(), 4);
+    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) TEST_STR_4, 4), 0);
+    ASSERT_EQ(client.getRemainingDataSize(), 12);
+    ASSERT_EQ(client.getRemainingBuffer(buffer, sizeof(buffer)), 12);
+    ASSERT_EQ(memcmp(buffer, (const unsigned char *) (TEST_STR_4 + 4), 12), 0);
+    ASSERT_EQ(client.getRemainingBuffer(tmp), 12);
+    ASSERT_EQ(tmp.size(), 12);
+    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) (TEST_STR_4 + 4), 12), 0);
+}
+
+TEST_F(SSLSimpleTest, communicationTest_rcvStopBytes_ov1) {
+    char data[5];
+    unsigned char buffer[16];
+    pthread_t thread;
+    std::vector <unsigned char> tmp;
+    struct timeval tvStart, tvEnd;
+    int diffTime = 0;
+    ASSERT_EQ(client.setPort(4431), true);
+    ASSERT_EQ(client.setKeepAliveMs(50), true);
+    gettimeofday(&tvStart, NULL);
+    ASSERT_EQ(client.init(), 0);
+    ASSERT_EQ(client.sendData(TEST_STR_4), 0);
+    strncpy(data, TEST_STR_4, 4);
+    data[4] = 0x00;
+    ASSERT_EQ(client.receiveStopBytes(data), 0);
+    gettimeofday(&tvEnd, NULL);
+    diffTime = (tvEnd.tv_sec - tvStart.tv_sec) * 1000 + (tvEnd.tv_usec - tvStart.tv_usec) / 1000;
+    ASSERT_EQ(diffTime >= 0 && diffTime <= 50, true);
+    ASSERT_EQ(client.getDataSize(), 4);
+    ASSERT_EQ(client.getBuffer(buffer, sizeof(buffer)), 4);
+    ASSERT_EQ(memcmp(buffer, (const unsigned char *) TEST_STR_4, 4), 0);
+    ASSERT_EQ(client.getBuffer(tmp), 4);
+    ASSERT_EQ(tmp.size(), 4);
+    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) TEST_STR_4, 4), 0);
+    ASSERT_EQ(client.getRemainingDataSize(), 12);
+    ASSERT_EQ(client.getRemainingBuffer(buffer, sizeof(buffer)), 12);
+    ASSERT_EQ(memcmp(buffer, (const unsigned char *) (TEST_STR_4 + 4), 12), 0);
+    ASSERT_EQ(client.getRemainingBuffer(tmp), 12);
+    ASSERT_EQ(tmp.size(), 12);
+    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) (TEST_STR_4 + 4), 12), 0);
+}
+
+TEST_F(SSLSimpleTest, communicationTest_rcvStopBytes_ov2) {
+    char data[5];
+    unsigned char buffer[16];
+    pthread_t thread;
+    std::vector <unsigned char> tmp;
+    struct timeval tvStart, tvEnd;
+    int diffTime = 0;
+    ASSERT_EQ(client.setPort(4431), true);
+    ASSERT_EQ(client.setKeepAliveMs(50), true);
+    gettimeofday(&tvStart, NULL);
+    ASSERT_EQ(client.init(), 0);
+    ASSERT_EQ(client.sendData(std::string(TEST_STR_4)), 0);
+    strncpy(data, TEST_STR_4, 4);
+    data[4] = 0x00;
+    ASSERT_EQ(client.receiveStopBytes(std::string(data)), 0);
+    gettimeofday(&tvEnd, NULL);
+    diffTime = (tvEnd.tv_sec - tvStart.tv_sec) * 1000 + (tvEnd.tv_usec - tvStart.tv_usec) / 1000;
+    ASSERT_EQ(diffTime >= 0 && diffTime <= 50, true);
+    ASSERT_EQ(client.getDataSize(), 4);
+    ASSERT_EQ(client.getBuffer(buffer, sizeof(buffer)), 4);
+    ASSERT_EQ(memcmp(buffer, (const unsigned char *) TEST_STR_4, 4), 0);
+    ASSERT_EQ(client.getBuffer(tmp), 4);
+    ASSERT_EQ(tmp.size(), 4);
+    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) TEST_STR_4, 4), 0);
+    ASSERT_EQ(client.getRemainingDataSize(), 12);
+    ASSERT_EQ(client.getRemainingBuffer(buffer, sizeof(buffer)), 12);
+    ASSERT_EQ(memcmp(buffer, (const unsigned char *) (TEST_STR_4 + 4), 12), 0);
+    ASSERT_EQ(client.getRemainingBuffer(tmp), 12);
+    ASSERT_EQ(tmp.size(), 12);
+    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) (TEST_STR_4 + 4), 12), 0);
+}
+
+TEST_F(SSLSimpleTest, communicationTest_rcvStopBytes_ov3) {
+    unsigned char buffer[16];
+    pthread_t thread;
+    std::vector <unsigned char> tmp;
+    struct timeval tvStart, tvEnd;
+    int diffTime = 0;
+    ASSERT_EQ(client.setPort(4431), true);
+    ASSERT_EQ(client.setKeepAliveMs(50), true);
+    gettimeofday(&tvStart, NULL);
+    ASSERT_EQ(client.init(), 0);
+    tmp.assign((const unsigned char *) TEST_STR_4, (const unsigned char *) TEST_STR_4 + strlen(TEST_STR_4));
+    ASSERT_EQ(client.sendData(tmp), 0);
+    tmp.assign((const unsigned char *) TEST_STR_4, (const unsigned char *) TEST_STR_4 + 4);
+    ASSERT_EQ(client.receiveStopBytes(tmp), 0);
+    gettimeofday(&tvEnd, NULL);
+    diffTime = (tvEnd.tv_sec - tvStart.tv_sec) * 1000 + (tvEnd.tv_usec - tvStart.tv_usec) / 1000;
+    ASSERT_EQ(diffTime >= 0 && diffTime <= 50, true);
+    ASSERT_EQ(client.getDataSize(), 4);
+    ASSERT_EQ(client.getBuffer(buffer, sizeof(buffer)), 4);
+    ASSERT_EQ(memcmp(buffer, (const unsigned char *) TEST_STR_4, 4), 0);
+    ASSERT_EQ(client.getBuffer(tmp), 4);
+    ASSERT_EQ(tmp.size(), 4);
+    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) TEST_STR_4, 4), 0);
+    ASSERT_EQ(client.getRemainingDataSize(), 12);
+    ASSERT_EQ(client.getRemainingBuffer(buffer, sizeof(buffer)), 12);
+    ASSERT_EQ(memcmp(buffer, (const unsigned char *) (TEST_STR_4 + 4), 12), 0);
+    ASSERT_EQ(client.getRemainingBuffer(tmp), 12);
+    ASSERT_EQ(tmp.size(), 12);
+    ASSERT_EQ(memcmp(tmp.data(), (const unsigned char *) (TEST_STR_4 + 4), 12), 0);
+}
