@@ -23,25 +23,25 @@
 
 /**
  * @file
- * @brief Enhanced TCPServer/IP (server) Communication Functions library.
+ * @brief Enhanced TCP/IP (server) Communication Functions library.
  *
  * This file contains a collection of functions and commands designed to facilitate and extend
- * basic TCPServer/IP communication in C++ for the client side. These functions are intended to simplify
- * the process of setting up, sending, receiving, and managing data over TCPServer/IP connections.
+ * basic TCP/IP communication in C++ for the server side. These functions are intended to simplify
+ * the process of setting up, sending, receiving, and managing data over TCP/IP connections.
  * The enhancements provided in this header file go beyond the standard library functions, offering
- * more flexibility and control for developers working with TCPServer/IP interfaces.
+ * more flexibility and control for developers working with TCP/IP interfaces.
  *
  * The key functionalities include:
- * - Initialization and configuration of TCPServer/IP Server.
- * - Sending and receiving data over TCPServer/IP connections.
- * - Error handling and diagnostics for TCPServer/IP communication on client side.
- * - Utility functions for managing TCPServer/IP buffers and flow control.
+ * - Initialization and configuration of TCP/IP Server.
+ * - Sending and receiving data over TCP/IP connections.
+ * - Error handling and diagnostics for TCP/IP communication on server side.
+ * - Utility functions for managing TCP/IP buffers and flow control.
  *
  * The functions in this file are designed to be easy to integrate into various projects,
- * providing a robust foundation for TCPServer/IP communication in embedded systems, networking,
- * or any application that requires TCPServer/IP data transmission.
+ * providing a robust foundation for TCP/IP communication in embedded systems, networking,
+ * or any application that requires TCP/IP data transmission.
  *
- * @note This file is a part of a larger project focusing on enhancing TCPServer/IP communication
+ * @note This file is a part of a larger project focusing on enhancing TCP/IP communication
  *       capabilities in C++ applications.
  *
  * @version 1.0.0
@@ -82,7 +82,7 @@ class TCPServer : public SynapSock {
     bool receptionHandlerAsThread;          /*!< mode to choose how the reception handler is run (as a thread or not) */
     unsigned short maxClient;               /*!< maximum number of client (for server) */
     SynapSock *client;                      /*!< client pointer that is being processed */
-    ClientCollection *clientList;           /*!< a collection of TCPServer/IP clients that have been accepted by the server */
+    ClientCollection *clientList;           /*!< a collection of TCP/IP clients that have been accepted by the server */
     const void *conReqCallbackFunction;     /*!< callback function that is automatically called when there is a connection request event */
     void *conReqCallbackParam;              /*!< parameters of the connection request event callback function */
     const void *receptionCallbackFunction;  /*!< callback function that is automatically called when there is a reception event */
@@ -176,7 +176,7 @@ class TCPServer : public SynapSock {
      * - `keepAliveMs = 0` : Keep-alive interval is set to 0 milliseconds.
      * - Initializes the mutex for thread safety.
      * @param[in] address The address is in the form of an IP address with a size of 4 bytes.
-     * @param[in] port The port of TCPServer/IP interface.
+     * @param[in] port The port of TCP/IP interface.
      */
     TCPServer(const unsigned char *address, int port);
 
@@ -202,7 +202,7 @@ class TCPServer : public SynapSock {
      * - `keepAliveMs = 0` : Keep-alive interval is set to 0 milliseconds.
      * - Initializes the mutex for thread safety.
      * @param[in] address The address is in the form of an IP address with a size of 4 bytes.
-     * @param[in] port The port of TCPServer/IP interface.
+     * @param[in] port The port of TCP/IP interface.
      */
     TCPServer(const std::vector <unsigned char> address, int port);
 
@@ -228,7 +228,7 @@ class TCPServer : public SynapSock {
      * - `keepAliveMs = 0` : Keep-alive interval is set to 0 milliseconds.
      * - Initializes the mutex for thread safety.
      * @param[in] address The address in the form of an IP address or domain (in this case, a string in the form of a char pointer).
-     * @param[in] port The port of TCPServer/IP interface.
+     * @param[in] port The port of TCP/IP interface.
      */
     TCPServer(const char *address, int port);
 
@@ -254,7 +254,7 @@ class TCPServer : public SynapSock {
      * - `keepAliveMs = 0` : Keep-alive interval is set to 0 milliseconds.
      * - Initializes the mutex for thread safety.
      * @param[in] address The address in the form of an IP address or domain (string).
-     * @param[in] port The port of TCPServer/IP interface.
+     * @param[in] port The port of TCP/IP interface.
      */
     TCPServer(const std::string address, int port);
 
@@ -287,9 +287,9 @@ class TCPServer : public SynapSock {
     int getMaximumClient();
 
     /**
-     * @brief Initialize TCPServer/IP Server connection.
+     * @brief Initialize TCP/IP Server connection.
      *
-     * This function attempts to open the specified TCPServer/IP (socket) port for communication. It initialize the port according to the current settings and prepares it for data transfer.
+     * This function attempts to open the specified TCP/IP (socket) port for communication. It initialize the port according to the current settings and prepares it for data transfer.
      *
      * @return `0` Initialize process success.
      * @return `1` if the port fails to open.
@@ -319,7 +319,7 @@ class TCPServer : public SynapSock {
     TCPServer::SERVER_EVENT_t eventCheck(unsigned short timeoutMs);
 
     /**
-     * @brief Accept the available client when TCPServer/IP Server listen the connection.
+     * @brief Accept the available client when TCP/IP Server listen the connection.
      *
      * This function attempts to accept the connection that requested by client side.
      *
