@@ -1380,11 +1380,47 @@ std::vector <unsigned char> Socket::getRemainingBufferAsVector(){
 int Socket::sendData(const unsigned char *buffer, size_t sz){
   pthread_mutex_lock(&(this->wmtx));
   size_t total = 0;
+  struct timeval tv_start;
+  struct timeval tv_crn;
+  int diffTime = 0;
   if (this->sockFd <= 0){
     pthread_mutex_unlock(&(this->wmtx));
     return 1;
   }
   ssize_t bytes = 0;
+  /* check Socket Output Buffer before send any data */
+  gettimeofday(&tv_start, NULL);
+  do {
+    ioctl(this->sockFd, TIOCOUTQ, &bytes);
+    if (bytes > 0){
+      gettimeofday(&tv_crn, NULL);
+      diffTime = (tv_crn.tv_sec - tv_start.tv_sec) * 1000 + (tv_crn.tv_usec - tv_start.tv_usec) / 1000;
+      if (this->tvTimeout.tv_sec > 0 || this->tvTimeout.tv_usec > 0){
+        if (diffTime > (this->tvTimeout.tv_sec * 1000 + this->tvTimeout.tv_usec / 1000)){
+          pthread_mutex_unlock(&(this->wmtx));
+          return 2;
+        }
+      }
+      else {
+        pthread_mutex_unlock(&(this->wmtx));
+        return 2;
+      }
+    }
+  } while (bytes > 0);
+#ifdef __STCP_SSL__
+  if (this->useSSL){
+    if (this->sslConn == nullptr){
+      pthread_mutex_unlock(&(this->wmtx));
+      return 1;
+    }
+    if (BIO_ctrl_pending(SSL_get_wbio(this->sslConn)) != 0){
+      pthread_mutex_unlock(&(this->wmtx));
+      return 2;
+    }
+  }
+#endif
+  bytes = 0;
+    /* send data */
   while (total < sz){
 #ifdef __STCP_SSL__
     if (this->useSSL){
