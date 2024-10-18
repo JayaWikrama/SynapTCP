@@ -632,8 +632,8 @@ bool TCPServer::acceptNewClient(){
   pthread_mutex_lock(&(this->mtx));
   pthread_mutex_lock(&(this->wmtx));
   int connFd = 0;
-  this->len = (socklen_t) sizeof(this->addr);
-  connFd = accept(this->sockFd, (struct sockaddr *) &(this->addr), &(this->len));
+  socklen_t len = (socklen_t) sizeof(this->addr);
+  connFd = accept(this->sockFd, (struct sockaddr *) &(this->addr), &(len));
   if (connFd <= 0){
     pthread_mutex_unlock(&(this->mtx));
     pthread_mutex_unlock(&(this->wmtx));

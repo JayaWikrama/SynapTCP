@@ -70,7 +70,6 @@ class Socket {
     struct sockaddr_in addr;              /*!< structures for handling internet addresses */
     int sockFd;                           /*!< socket file descriptor */
     unsigned short keepAliveMs;           /*!< maximum wait time for receiving the next byte of data after the initial byte has been received */
-    socklen_t len;                        /*!< type definition for length and size values used by socket related parameters, return values and structure members */
     struct timeval tvTimeout;             /*!< store timeout connection parameters */
     #ifdef __STCP_SSL__
         bool useSSL;                      /*!< variable to activate SSL Mode Protection */

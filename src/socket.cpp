@@ -50,7 +50,6 @@ static void __TCP(Socket *obj){
 Socket::Socket(){
   pthread_mutex_init(&(this->mtx), nullptr);
   pthread_mutex_init(&(this->wmtx), nullptr);
-  memset(&(this->len), 0x00, sizeof(this->len));
   memset(&(this->addr), 0x00, sizeof(this->addr));
   __TCP(this);
   this->sockFd = -1;
@@ -687,7 +686,6 @@ bool Socket::duplicate(Socket &obj){
   obj.address.assign(this->address.begin(), this->address.end());
   obj.sockFd = this->sockFd;
   obj.keepAliveMs = this->keepAliveMs;
-  obj.len = this->len;
   memcpy(&(obj.tvTimeout), &(this->tvTimeout), sizeof(obj.tvTimeout));
   memcpy(&(obj.addr), &(this->addr), sizeof(obj.addr));
 #ifdef __STCP_SSL__
