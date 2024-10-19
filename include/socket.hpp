@@ -328,7 +328,7 @@ class Socket {
      *
      * @param keepAliveMs The keep-alive interval in milliseconds.
      */
-    bool setKeepAliveMs(int keepAliveMs);
+    bool setKeepAlive(int keepAliveMs);
 
     /**
      * @brief Sets the SSL protection mode (is activated or not).
@@ -410,7 +410,7 @@ class Socket {
      *
      * @return The keep-alive interval in milliseconds.
      */
-    int getKeepAliveMs();
+    int getKeepAlive();
 
     /**
      * @brief Gets is the SSL handshake active or not.

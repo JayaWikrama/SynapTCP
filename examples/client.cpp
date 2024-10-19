@@ -23,7 +23,7 @@ int main(int argc, char **argv){
     TCPClient client(argv[1], atoi(argv[2]));
     /* Prepare Object */
     client.setTimeout(atoi(argv[3]));
-    client.setKeepAliveMs(atoi(argv[4]));
+    client.setKeepAlive(atoi(argv[4]));
     socketSetupDataFrameProtocol(client);
     DataFrame *frame = client[1];
     /* Do socket communication */

@@ -53,7 +53,7 @@ protected:
     void SetUp() override {
         isRun = true;
         server.setTimeout(250);
-        server.setKeepAliveMs(25);
+        server.setKeepAlive(25);
         server.setReceptionHandler(&receptionCallbackFunction, nullptr);
         pthread_mutex_init(&mtx, nullptr);
         pthread_cond_init(&cond, nullptr);
@@ -283,7 +283,7 @@ TEST_F(TCPFramedDataTest, SendTest_1) {
     std::vector <unsigned char> tmp;
     client.setPort(4431);
     client.setTimeout(250);
-    client.setKeepAliveMs(1000);
+    client.setKeepAlive(1000);
     DataFrame startBytes(DataFrame::FRAME_TYPE_START_BYTES, "1234");
     DataFrame cmdBytes(DataFrame::FRAME_TYPE_COMMAND, "5");
     cmdBytes.setPostExecuteFunction((const void *) &setupLengthByCommand, nullptr);
@@ -321,7 +321,7 @@ TEST_F(TCPFramedDataTest, ReceptionTest_1) {
     std::vector <unsigned char> tmp;
     client.setPort(4431);
     client.setTimeout(250);
-    client.setKeepAliveMs(1000);
+    client.setKeepAlive(1000);
     DataFrame startBytes(DataFrame::FRAME_TYPE_START_BYTES, "1234");
     DataFrame cmdBytes(DataFrame::FRAME_TYPE_COMMAND, 1);
     cmdBytes.setPostExecuteFunction((const void *) &setupLengthByCommand, nullptr);
@@ -359,7 +359,7 @@ TEST_F(TCPFramedDataTest, ReceptionTest_withSuffix_1) {
     std::vector <unsigned char> tmp;
     client.setPort(4431);
     client.setTimeout(250);
-    client.setKeepAliveMs(1000);
+    client.setKeepAlive(1000);
     DataFrame startBytes(DataFrame::FRAME_TYPE_START_BYTES, "1234");
     DataFrame cmdBytes(DataFrame::FRAME_TYPE_COMMAND, 1);
     cmdBytes.setPostExecuteFunction((const void *) &setupLengthByCommand, nullptr);
@@ -399,7 +399,7 @@ TEST_F(TCPFramedDataTest, ReceptionTest_withPrefixAndSuffix_1) {
     std::vector <unsigned char> tmp;
     client.setPort(4431);
     client.setTimeout(250);
-    client.setKeepAliveMs(1000);
+    client.setKeepAlive(1000);
     DataFrame startBytes(DataFrame::FRAME_TYPE_START_BYTES, "1234");
     DataFrame cmdBytes(DataFrame::FRAME_TYPE_COMMAND, 1);
     cmdBytes.setPostExecuteFunction((const void *) &setupLengthByCommand, nullptr);
@@ -439,7 +439,7 @@ TEST_F(TCPFramedDataTest, ReceptionTest_withPrefixAndSuffix_2) {
     std::vector <unsigned char> tmp;
     client.setPort(4431);
     client.setTimeout(250);
-    client.setKeepAliveMs(1000);
+    client.setKeepAlive(1000);
     DataFrame startBytes(DataFrame::FRAME_TYPE_START_BYTES, "1234");
     DataFrame cmdBytes(DataFrame::FRAME_TYPE_COMMAND, 1);
     cmdBytes.setPostExecuteFunction((const void *) &setupLengthByCommand, nullptr);
@@ -480,7 +480,7 @@ TEST_F(TCPFramedDataTest, ReceptionTest_withPrefixAndSuffix_3) {
     std::vector <unsigned char> tmp;
     client.setPort(4431);
     client.setTimeout(250);
-    client.setKeepAliveMs(1000);
+    client.setKeepAlive(1000);
     DataFrame startBytes(DataFrame::FRAME_TYPE_START_BYTES, "1234");
     DataFrame cmdBytes(DataFrame::FRAME_TYPE_COMMAND, 1);
     cmdBytes.setPostExecuteFunction((const void *) &setupLengthByCommand, nullptr);
@@ -537,7 +537,7 @@ TEST_F(TCPFramedDataTest, ReceptionTest_withPrefixAndSuffix_4) {
     std::vector <unsigned char> tmp;
     client.setPort(4431);
     client.setTimeout(250);
-    client.setKeepAliveMs(1000);
+    client.setKeepAlive(1000);
     DataFrame startBytes(DataFrame::FRAME_TYPE_START_BYTES, 1, (const unsigned char *) "\x02");
     DataFrame lengthBytes(DataFrame::FRAME_TYPE_CONTENT_LENGTH, 1);
     lengthBytes.setPostExecuteFunction((const void *) &setupLengthByCommand2, (void *) &client);
@@ -592,7 +592,7 @@ TEST_F(TCPFramedDataTest, ReceptionTest_withUnknownDataSz_1) {
     std::vector <unsigned char> tmp;
     client.setPort(4431);
     client.setTimeout(250);
-    client.setKeepAliveMs(1000);
+    client.setKeepAlive(1000);
     DataFrame startBytes(DataFrame::FRAME_TYPE_START_BYTES, "1234");
     DataFrame dataBytes(DataFrame::FRAME_TYPE_DATA);
     DataFrame stopBytes(DataFrame::FRAME_TYPE_STOP_BYTES, "90-=");
@@ -630,7 +630,7 @@ TEST_F(TCPFramedDataTest, ReceptionTest_withUnknownDataSz_2) {
     std::vector <unsigned char> tmp;
     client.setPort(4431);
     client.setTimeout(250);
-    client.setKeepAliveMs(1000);
+    client.setKeepAlive(1000);
     DataFrame startBytes(DataFrame::FRAME_TYPE_START_BYTES, "1234");
     DataFrame dataBytes(DataFrame::FRAME_TYPE_DATA);
     DataFrame stopBytes(DataFrame::FRAME_TYPE_STOP_BYTES, "90-=");
@@ -684,7 +684,7 @@ TEST_F(TCPFramedDataTest, ReadNegativeTest_1) {
     std::vector <unsigned char> tmp;
     client.setPort(4431);
     client.setTimeout(250);
-    client.setKeepAliveMs(1000);
+    client.setKeepAlive(1000);
     DataFrame startBytes(DataFrame::FRAME_TYPE_START_BYTES, "1234");
     DataFrame cmdBytes(DataFrame::FRAME_TYPE_COMMAND);
     DataFrame dataBytes(DataFrame::FRAME_TYPE_DATA);
@@ -723,7 +723,7 @@ TEST_F(TCPFramedDataTest, ReadNegativeTest_2) {
     std::vector <unsigned char> tmp;
     client.setPort(4431);
     client.setTimeout(250);
-    client.setKeepAliveMs(1000);
+    client.setKeepAlive(1000);
     DataFrame startBytes(DataFrame::FRAME_TYPE_START_BYTES, "1234");
     DataFrame cmdBytes(DataFrame::FRAME_TYPE_COMMAND, 1);
     DataFrame dataBytes(DataFrame::FRAME_TYPE_DATA, 3);
@@ -762,7 +762,7 @@ TEST_F(TCPFramedDataTest, ReceptionTestNegative_InvalidTrigger_1) {
     std::vector <unsigned char> tmp;
     client.setPort(4431);
     client.setTimeout(250);
-    client.setKeepAliveMs(1000);
+    client.setKeepAlive(1000);
     DataFrame startBytes(DataFrame::FRAME_TYPE_START_BYTES, "1234");
     DataFrame cmdBytes(DataFrame::FRAME_TYPE_COMMAND, 1);
     cmdBytes.setPostExecuteFunction((const void *) &setupLengthByCommand, (void *) &client);

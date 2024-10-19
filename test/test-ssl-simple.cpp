@@ -87,7 +87,7 @@ protected:
     void SetUp() override {
         isRun = true;
         server.setTimeout(250);
-        server.setKeepAliveMs(25);
+        server.setKeepAlive(25);
         server.setReceptionHandler(&receptionCallbackFunction, nullptr);
         server.setIsUseSSL(true);
         server.initializeSSL(std::string(cert), std::string(key));
@@ -255,7 +255,7 @@ TEST_F(SSLSimpleTest, communicationTest_with_delayed_bytes) {
     server.setReceptionHandler(&receptionCallbackFunctionEchoDelay, (void *) (long) 50);
     ASSERT_EQ(client.setPort(4431), true);
     ASSERT_EQ(client.init(), 0);
-    ASSERT_EQ(client.setKeepAliveMs(75), true);
+    ASSERT_EQ(client.setKeepAlive(75), true);
     ASSERT_EQ(client.sendData(sdata), 0);
     for (int i = 0; i < 5; i++){
         ASSERT_EQ(client.receiveData(13), 0);
@@ -293,7 +293,7 @@ TEST_F(SSLSimpleTest, communicationTest_startBytes) {
     struct timeval tvStart, tvEnd;
     int diffTime = 0;
     ASSERT_EQ(client.setPort(4431), true);
-    ASSERT_EQ(client.setKeepAliveMs(50), true);
+    ASSERT_EQ(client.setKeepAlive(50), true);
     gettimeofday(&tvStart, NULL);
     ASSERT_EQ(client.init(), 0);
     ASSERT_EQ(client.sendData((const unsigned char *) TEST_STR_2, 16), 0);
@@ -323,7 +323,7 @@ TEST_F(SSLSimpleTest, communicationTest_startBytes_ov1) {
     struct timeval tvStart, tvEnd;
     int diffTime = 0;
     ASSERT_EQ(client.setPort(4431), true);
-    ASSERT_EQ(client.setKeepAliveMs(50), true);
+    ASSERT_EQ(client.setKeepAlive(50), true);
     gettimeofday(&tvStart, NULL);
     ASSERT_EQ(client.init(), 0);
     ASSERT_EQ(client.sendData(TEST_STR_2), 0);
@@ -355,7 +355,7 @@ TEST_F(SSLSimpleTest, communicationTest_startBytes_ov2) {
     struct timeval tvStart, tvEnd;
     int diffTime = 0;
     ASSERT_EQ(client.setPort(4431), true);
-    ASSERT_EQ(client.setKeepAliveMs(50), true);
+    ASSERT_EQ(client.setKeepAlive(50), true);
     gettimeofday(&tvStart, NULL);
     ASSERT_EQ(client.init(), 0);
     ASSERT_EQ(client.sendData(std::string(TEST_STR_2)), 0);
@@ -387,7 +387,7 @@ TEST_F(SSLSimpleTest, communicationTest_startBytes_ov3) {
     struct timeval tvStart, tvEnd;
     int diffTime = 0;
     ASSERT_EQ(client.setPort(4431), true);
-    ASSERT_EQ(client.setKeepAliveMs(50), true);
+    ASSERT_EQ(client.setKeepAlive(50), true);
     gettimeofday(&tvStart, NULL);
     ASSERT_EQ(client.init(), 0);
     tmp.assign((const unsigned char *) data, (const unsigned char *) data + strlen(data));
@@ -418,7 +418,7 @@ TEST_F(SSLSimpleTest, communicationTest_rcvUntillStopBytes) {
     struct timeval tvStart, tvEnd;
     int diffTime = 0;
     ASSERT_EQ(client.setPort(4431), true);
-    ASSERT_EQ(client.setKeepAliveMs(50), true);
+    ASSERT_EQ(client.setKeepAlive(50), true);
     gettimeofday(&tvStart, NULL);
     ASSERT_EQ(client.init(), 0);
     ASSERT_EQ(client.sendData((const unsigned char *) TEST_STR_3, 462), 0);
@@ -448,7 +448,7 @@ TEST_F(SSLSimpleTest, communicationTest_rcvUntillStopBytes_ov1) {
     struct timeval tvStart, tvEnd;
     int diffTime = 0;
     ASSERT_EQ(client.setPort(4431), true);
-    ASSERT_EQ(client.setKeepAliveMs(50), true);
+    ASSERT_EQ(client.setKeepAlive(50), true);
     gettimeofday(&tvStart, NULL);
     ASSERT_EQ(client.init(), 0);
     ASSERT_EQ(client.sendData(TEST_STR_3), 0);
@@ -481,7 +481,7 @@ TEST_F(SSLSimpleTest, communicationTest_rcvUntillStopBytes_ov2) {
     struct timeval tvStart, tvEnd;
     int diffTime = 0;
     ASSERT_EQ(client.setPort(4431), true);
-    ASSERT_EQ(client.setKeepAliveMs(50), true);
+    ASSERT_EQ(client.setKeepAlive(50), true);
     gettimeofday(&tvStart, NULL);
     ASSERT_EQ(client.init(), 0);
     ASSERT_EQ(client.sendData(std::string(TEST_STR_3)), 0);
@@ -513,7 +513,7 @@ TEST_F(SSLSimpleTest, communicationTest_rcvUntillStopBytes_ov3) {
     struct timeval tvStart, tvEnd;
     int diffTime = 0;
     ASSERT_EQ(client.setPort(4431), true);
-    ASSERT_EQ(client.setKeepAliveMs(50), true);
+    ASSERT_EQ(client.setKeepAlive(50), true);
     gettimeofday(&tvStart, NULL);
     ASSERT_EQ(client.init(), 0);
     tmp.assign((const unsigned char *) data, (const unsigned char *) data + strlen(data));
@@ -544,7 +544,7 @@ TEST_F(SSLSimpleTest, communicationTest_rcvStopBytes) {
     struct timeval tvStart, tvEnd;
     int diffTime = 0;
     ASSERT_EQ(client.setPort(4431), true);
-    ASSERT_EQ(client.setKeepAliveMs(50), true);
+    ASSERT_EQ(client.setKeepAlive(50), true);
     gettimeofday(&tvStart, NULL);
     ASSERT_EQ(client.init(), 0);
     ASSERT_EQ(client.sendData((const unsigned char *) TEST_STR_4, 16), 0);
@@ -574,7 +574,7 @@ TEST_F(SSLSimpleTest, communicationTest_rcvStopBytes_ov1) {
     struct timeval tvStart, tvEnd;
     int diffTime = 0;
     ASSERT_EQ(client.setPort(4431), true);
-    ASSERT_EQ(client.setKeepAliveMs(50), true);
+    ASSERT_EQ(client.setKeepAlive(50), true);
     gettimeofday(&tvStart, NULL);
     ASSERT_EQ(client.init(), 0);
     ASSERT_EQ(client.sendData(TEST_STR_4), 0);
@@ -606,7 +606,7 @@ TEST_F(SSLSimpleTest, communicationTest_rcvStopBytes_ov2) {
     struct timeval tvStart, tvEnd;
     int diffTime = 0;
     ASSERT_EQ(client.setPort(4431), true);
-    ASSERT_EQ(client.setKeepAliveMs(50), true);
+    ASSERT_EQ(client.setKeepAlive(50), true);
     gettimeofday(&tvStart, NULL);
     ASSERT_EQ(client.init(), 0);
     ASSERT_EQ(client.sendData(std::string(TEST_STR_4)), 0);
@@ -637,7 +637,7 @@ TEST_F(SSLSimpleTest, communicationTest_rcvStopBytes_ov3) {
     struct timeval tvStart, tvEnd;
     int diffTime = 0;
     ASSERT_EQ(client.setPort(4431), true);
-    ASSERT_EQ(client.setKeepAliveMs(50), true);
+    ASSERT_EQ(client.setKeepAlive(50), true);
     gettimeofday(&tvStart, NULL);
     ASSERT_EQ(client.init(), 0);
     tmp.assign((const unsigned char *) TEST_STR_4, (const unsigned char *) TEST_STR_4 + strlen(TEST_STR_4));
@@ -668,7 +668,7 @@ TEST_F(SSLSimpleTest, communicationTest_rcvNBytes) {
     struct timeval tvStart, tvEnd;
     int diffTime = 0;
     ASSERT_EQ(client.setPort(4431), true);
-    ASSERT_EQ(client.setKeepAliveMs(50), true);
+    ASSERT_EQ(client.setKeepAlive(50), true);
     gettimeofday(&tvStart, NULL);
     ASSERT_EQ(client.init(), 0);
     ASSERT_EQ(client.sendData((const unsigned char *) TEST_STR_3, 462), 0);
@@ -697,7 +697,7 @@ TEST_F(SSLSimpleTest, negativeCommunicationTest_not_connected) {
     struct timeval tvStart, tvEnd;
     int diffTime = 0;
     ASSERT_EQ(client.setPort(4431), true);
-    ASSERT_EQ(client.setKeepAliveMs(50), true);
+    ASSERT_EQ(client.setKeepAlive(50), true);
     gettimeofday(&tvStart, NULL);
     ASSERT_EQ(client.sendData((const unsigned char *) TEST_STR_3, 462), 1);
     ASSERT_EQ(client.receiveData(385), 1);
@@ -725,7 +725,7 @@ TEST_F(SSLSimpleTest, negativeCommunicationTest_try_to_connecting_invalid_url) {
     int diffTime = 0;
     ASSERT_EQ(client.setAddress("1.2.3.4"), true);
     ASSERT_EQ(client.setPort(4431), true);
-    ASSERT_EQ(client.setKeepAliveMs(50), true);
+    ASSERT_EQ(client.setKeepAlive(50), true);
     gettimeofday(&tvStart, NULL);
     ASSERT_EQ(client.sendData((const unsigned char *) TEST_STR_3, 462), 1);
     ASSERT_EQ(client.receiveData(385), 1);
@@ -752,7 +752,7 @@ TEST_F(SSLSimpleTest, negativeCommunicationTest_no_input_bytes_available) {
     struct timeval tvStart, tvEnd;
     int diffTime = 0;
     ASSERT_EQ(client.setPort(4431), true);
-    ASSERT_EQ(client.setKeepAliveMs(50), true);
+    ASSERT_EQ(client.setKeepAlive(50), true);
     ASSERT_EQ(client.setTimeout(250), true);
     ASSERT_EQ(client.init(), 0);
     gettimeofday(&tvStart, NULL);
@@ -780,7 +780,7 @@ TEST_F(SSLSimpleTest, negativeCommunicationTest_rcvStopBytes) {
     struct timeval tvStart, tvEnd;
     int diffTime = 0;
     ASSERT_EQ(client.setPort(4431), true);
-    ASSERT_EQ(client.setKeepAliveMs(50), true);
+    ASSERT_EQ(client.setKeepAlive(50), true);
     gettimeofday(&tvStart, NULL);
     ASSERT_EQ(client.init(), 0);
     ASSERT_EQ(client.sendData((const unsigned char *) TEST_STR_4, 16), 0);

@@ -29,7 +29,7 @@
 static void __TCP(Socket *obj){
   obj->setPort(3000);
   obj->setAddress("127.0.0.1");
-  obj->setKeepAliveMs(0);
+  obj->setKeepAlive(0);
   obj->setTimeout(1, 500);
 #ifdef __STCP_SSL__
   obj->setIsUseSSL(false);
@@ -431,7 +431,7 @@ bool Socket::setTimeout(int seconds, int milliseconds){
  *
  * @param keepAliveMs The keep-alive interval in milliseconds.
  */
-bool Socket::setKeepAliveMs(int keepAliveMs){
+bool Socket::setKeepAlive(int keepAliveMs){
   if (keepAliveMs < 0) return false;
   pthread_mutex_lock(&(this->mtx));
   pthread_mutex_lock(&(this->wmtx));
@@ -592,7 +592,7 @@ const struct timeval *Socket::getTimeout(){
  *
  * @return The keep-alive interval in milliseconds.
  */
-int Socket::getKeepAliveMs(){
+int Socket::getKeepAlive(){
   return this->keepAliveMs;
 }
 
