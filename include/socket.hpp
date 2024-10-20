@@ -74,7 +74,6 @@ class Socket {
     #ifdef __STCP_SSL__
         bool useSSL;                      /*!< variable to activate SSL Mode Protection */
         bool sslVerifyMode;               /*!< mode of ssl connection routine, false to disable certificate verification process and true value to enable certificate verification process (this variable only available if SSL layer mode is activated) */
-        int sslConnRoutineOkStatus;       /*!< variable to store the reason of disconnected event, 0 for normal routine and -1 for specific case (this variable only available if SSL layer mode is activated) */
         SSL *sslConn;                     /*!< SSL file descriptor (this variable only available if SSL layer mode is activated) */
     #endif
     pthread_mutex_t mtx;                  /*!< locking mechanism for common method */

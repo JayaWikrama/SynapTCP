@@ -54,7 +54,6 @@ Socket::Socket(){
   __TCP(this);
   this->sockFd = -1;
 #ifdef __STCP_SSL__
-  this->sslConnRoutineOkStatus = 0;
   this->sslConn = nullptr;
 #endif
   this->data.clear();
@@ -691,7 +690,6 @@ bool Socket::duplicate(Socket &obj){
 #ifdef __STCP_SSL__
   obj.useSSL = this->useSSL;
   obj.sslVerifyMode = this->sslVerifyMode;
-  obj.sslConnRoutineOkStatus = this->sslConnRoutineOkStatus;
   obj.sslConn = this->sslConn;
 #endif
   obj.data.assign(this->data.begin(), this->data.end());
@@ -1506,14 +1504,11 @@ void Socket::closeConnection(){
       }
     }
     else {
-      if (this->sslConnRoutineOkStatus != -1){
-        SSL_shutdown(this->sslConn);
-      }
+      SSL_shutdown(this->sslConn);
     }
     SSL_free(this->sslConn);
     this->sslConn = nullptr;
   }
-  this->sslConnRoutineOkStatus = 0;
 #endif
   if (this->sockFd > 0){
     if (!close(this->sockFd)){
