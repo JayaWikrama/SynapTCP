@@ -46,7 +46,11 @@ void *receptionThreadHandler(void *ptr){
   pthread_detach(obj->th);
   obj->th = 0;
   gettimeofday(&(obj->lastActivity), nullptr);
-  if (obj->pipe[1]) write(obj->pipe[1], "\x30", 1);
+  if (obj->pipe[1]){
+    if (write(obj->pipe[1], "\x30", 1) != 1){
+      std::cout << __func__ << ": failed to write pipe" << std::endl;
+    }
+  }
   pthread_mutex_unlock(&(obj->mtx));
   std::cout << __func__ << ": thread end" << std::endl;
   return nullptr;
